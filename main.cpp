@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;   
 #include "hom.hh"
+#include "testSpasmGenerator.cpp"
 
 void test_tree() {
 	int t = 5;
@@ -30,6 +31,6 @@ int main() {
 	cin.tie(0);  
     Graph G(1);  
 	test_tree();
-	cout << "test!!!" << "\n";
+	runAllTests();
 	return 0;
 }
