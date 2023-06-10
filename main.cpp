@@ -23,13 +23,13 @@ void test_tree() {
 	cout << hom.run() << "\n";
 	cout << homTree.run() << "\n";
 	assert(hom.run() == homTree.run());
-}
+	}
  
 
 int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
-    Graph G(1);  
+	Graph G(1);  
 	test_tree();
 	runAllTests();
 	return 0;
