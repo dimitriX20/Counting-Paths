@@ -3,7 +3,7 @@
 struct DSU {
 	std::vector<int> e;
 	DSU(int N) { e = std::vector<int>(N, -1); }
-  DSU() = default; // Default constructor
+    DSU() = default; // Default constructor
 
 	// get representive component (uses path compression)
 	int get(int x) { return e[x] < 0 ? x : e[x] = get(e[x]); }
