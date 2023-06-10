@@ -1,26 +1,25 @@
 #pragma once
 
-#include <vector>
 #include<set> 
 #include "graph.hh"
 #include <unordered_set>
 #include <cmath>
 #include <map>
 #include <algorithm>
-#include <numeric>  
+#include <numeric>   
+#include "dsu.cpp"
 //#include <mutex>
 
 //std::mutex graphMutex;
-
 
 struct Graph {
   int n, m;
   std::vector<std::vector<int>> adj;
   std::vector<std::set<int>> s; 
-  std::map<std::pair<int, int>, std::vector<Graph>> mp;
+  std::map<std::pair<int, int>, std::vector<pair<int, Graph>>> mp;
+  DSU dsu;  
 
-  Graph(int n) : n(n), adj(n), s(n), m(0) {}
-
+  Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n) {}
 
   void addEdge(int u, int v) {
     adj[u].push_back(v);
@@ -41,47 +40,47 @@ struct Graph {
     return ans; 
   }
 
-  // Check whether two graphs are isomorphic.
-bool isomorphic(const Graph &h) { 
-    if (n != h.n)
-        return false;
+    // Check whether two graphs are isomorphic.
+  bool isomorphic(const Graph &h) { 
+      if (n != h.n)
+          return false;
 
-    // Create vectors of degrees
-    std::vector<int> deg1(n);
-    std::vector<int> deg2(h.n);
+      // Create vectors of degrees
+      std::vector<int> deg1(n);
+      std::vector<int> deg2(h.n);
 
-    for (int i = 0; i < n; i++)
-        deg1[i] = adj[i].size();
+      for (int i = 0; i < n; i++)
+          deg1[i] = adj[i].size();
 
-    for (int i = 0; i < h.n; i++)
-        deg2[i] = h.adj[i].size();
+      for (int i = 0; i < h.n; i++)
+          deg2[i] = h.adj[i].size();
 
-    std::sort(deg1.begin(), deg1.end());
-    std::sort(deg2.begin(), deg2.end());
-    if (deg1 != deg2)
-        return false;
- 
-    std::vector<int> p(h.n);
-    std::iota(p.begin(), p.end(), 0);
+      std::sort(deg1.begin(), deg1.end());
+      std::sort(deg2.begin(), deg2.end());
+      if (deg1 != deg2)
+          return false;
+  
+      std::vector<int> p(h.n);
+      std::iota(p.begin(), p.end(), 0);
 
-    do {
-        bool isIsomorphic = true;
-        for (int i = 0; i < n; i++) {
-            for (int j : s[i]) {
-                if (h.s[p[i]].find(p[j]) == h.s[p[i]].end()) {
-                    isIsomorphic = false;
-                    break;
-                }
-            }
-            if (!isIsomorphic)
-                break;
-        }
-        if (isIsomorphic)
-            return true;
-    } while (std::next_permutation(p.begin(), p.end()));
+      do {
+          bool isIsomorphic = true;
+          for (int i = 0; i < n; i++) {
+              for (int j : s[i]) {
+                  if (h.s[p[i]].find(p[j]) == h.s[p[i]].end()) {
+                      isIsomorphic = false;
+                      break;
+                  }
+              }
+              if (!isIsomorphic)
+                  break;
+          }
+          if (isIsomorphic)
+              return true;
+      } while (std::next_permutation(p.begin(), p.end()));
 
-    return false;
-}
+      return false;
+  }
 
   // Copy constructor
   Graph(const Graph& other) {
@@ -90,6 +89,7 @@ bool isomorphic(const Graph &h) {
       m = other.m;
       adj = other.adj;
       s = other.s;
+      dsu = other.dsu;
   }
 
   // Assignment operator
@@ -100,6 +100,7 @@ bool isomorphic(const Graph &h) {
           m = other.m;
           adj = other.adj;
           s = other.s;
+          dsu = DSU(other.n);
       }
       return *this;
   }
@@ -183,7 +184,7 @@ Graph contract(const Graph& h, int v, int u){
   return res; 
 }
 
-std::vector<Graph> generateSpasm(Graph &g) {  
+std::vector<std::tuple<DSU, int, Graph>> generateSpasm(Graph &g) {  
     // we assume that g is the initial P_k graph
     // Get all pairs of non-neighboring vertices.
     std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
@@ -206,16 +207,16 @@ std::vector<Graph> generateSpasm(Graph &g) {
 
         // If no isomorphic graph is in the map, add the new graph.
         if (!isomorphicExists) {
-            g.mp[key].push_back(newGraph);
+            g.mp[key].push_back({1, newGraph});
             generateSpasm(newGraph);
         }
     }
 
     // Concatenate all vectors in mp to get the final result.
-    std::vector<Graph> spasms = {g};
+    std::vector<std::tuple<DSU, int, Graph>> spasms = {g};
     for (auto &pair : g.mp) {
         for(auto &graphPair : pair.second) {
-            spasms.push_back(graphPair);
+            spasms.emplace_back(graphPair);
         }
     }
 
@@ -266,52 +267,33 @@ std::vector<Graph> connectedComponents(Graph G) {
 }
  
 
-// int64_t countSubgraphs(Graph H, Graph G) {
+int64_t countSubgraphs(Graph H, Graph G) {
+  auto sp = generateSpasm(H); 
+  std:vector<pair<int64_t, Graph>> spasm(sp.begin(), sp.end()); 
 
-// }
+  int64_t subgraphs = 0; 
+  for (auto& h: spasm) {
+    int vorzeichen = (abs(H.n - h.second.n) & 1 ? -1 : 1); // hier evtl. h.second.n modifizeren nachdem genSpasm final implementiert
+    HomomorphismCounting<int64_t> homCounter(h.second, G);
+    subgraphs += h.first * homCounter.run(); 
 
-// // Definition der Funktion sub_GMP_with_iso_checking
-// int sub_GMP_with_iso_checking(Graph H, Graph G) {
-//     // Ruf partition_with_iso_checking auf, um die Partitionierung und Multiplikatoren zu erhalten
-//     std::pair<std::vector<Subgraph>, std::vector<int>> result = partition_with_iso_checking(H);
-//     std::vector<Subgraph> graph_list = result.first;
-//     std::vector<int> mul_list = result.second;
+    /* 
+      müssen das Produkt der (Block-Größen - 1)! von jeder Partition ermitteln 
+      dazu speichern wir für jeden Spasm Graphen eine eigene DSU Datenstruktur  
+    */ 
 
-//     std::vector<int> hom_list;
 
-//     // Schleife über jeden Teilgraphen h in graph_list
-//     for (const auto& h : graph_list) {
-//         int hom = 1;
+    /* 
+      außerdem sollten wir die Anzahl der Vorkommnisse eines jeden Spasm Graphen
+      beim generieren des Spasms speichern als Multiplikator 
+    */  
+  }
 
-//         // Schleife über die zusammenhängenden Komponenten h_c von h
-//         for (const auto& h_c : h.connected_components()) {
-//             int hom_ = 0;
+  int64_t automorphisms = 0; 
+  std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 
-//             // Schleife über die zusammenhängenden Komponenten g_c von G
-//             for (const auto& g_c : G.connected_components()) {
-//                 hom_ += find_homomorphisms(h.subgraph(h_c), G.subgraph(g_c), true);
-//             }
+  //for (auto& h: connectedComponentsH)
+ //   automorphisms += countAutomorphisms(h); 
 
-//             hom *= hom_;
-//         }
-
-//         hom_list.push_back(hom);
-//     }
-
-//     int num_sub = 0;
-
-//     // Berechne das Skalarprodukt von mul_list und hom_list
-//     for (size_t i = 0; i < mul_list.size(); ++i) {
-//         num_sub += mul_list[i] * hom_list[i];
-//     }
-
-//     // Berechne die Anzahl der Isomorphismen von H zu sich selbst
-//     int self_iso = 0;
-//     for (const auto& h : H.connected_components()) {
-//         self_iso += find_homomorphisms(H.subgraph(h), H.subgraph(h), true);
-//     }
-
-//     num_sub /= self_iso;
-
-//     return num_sub;
-// }
+  return subgraphs;// / automorphisms; 
+}
