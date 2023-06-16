@@ -6,7 +6,7 @@
 #include <map>
 #include <algorithm>
 #include <numeric>   
-#include "dsu.cpp"
+#include "dsu.cpp"  
 //#include <mutex>
 
 //std::mutex graphMutex;
@@ -17,7 +17,7 @@ struct Graph {
 	std::vector<std::vector<int>> adj;
 	std::vector<std::set<int>> s; 
 	std::vector<int> oldName; 
-	std::map<std::pair<int, int>, std::vector<pair<int, Graph>>> mp;
+	std::map<std::pair<int, int>, std::vector<std::pair<int, Graph>>> mp;
 
 	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n), oldName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
@@ -293,7 +293,27 @@ std::vector<Graph> connectedComponents(Graph G) {
 	}
 	return components;
 }
- 
+
+Graph createPetersonGraph() {
+    Graph peterson(10);
+    peterson.addEdge(0, 1);
+    peterson.addEdge(1, 2);
+    peterson.addEdge(2, 3);
+    peterson.addEdge(3, 4);
+    peterson.addEdge(4, 0);
+    peterson.addEdge(0, 5);
+    peterson.addEdge(1, 6);
+    peterson.addEdge(2, 7);
+    peterson.addEdge(3, 8);
+    peterson.addEdge(4, 9);
+    peterson.addEdge(5, 7);
+    peterson.addEdge(7, 9);
+    peterson.addEdge(9, 6);
+    peterson.addEdge(6, 8);
+    peterson.addEdge(8, 5);
+    return peterson;
+}
+
 // int64_t countSubgraphs(Graph H, Graph G) {
 // 	std::vector<int64_t> factorials(21); 
 // 	factorials[0] = 1LL; 

@@ -3,6 +3,30 @@ using namespace std;
 #include "hom.hh" // achte auf doppeltes include, wenn spasm wieder auskommentiert 
 #include "testSpasmGenerator.cpp"
 
+int64_t countAutomorphisms(const Graph &h, const Graph& g) { 
+	int64_t ans = 0; 
+	std::vector<int> p(h.n);
+	std::iota(p.begin(), p.end(), 0);
+
+	do {
+			bool isIsomorphic = true;
+			for (int i = 0; i < g.n; i++) {
+					for (int j : g.s[i]) {
+							if (h.s[p[i]].find(p[j]) == h.s[p[i]].end()) {
+									isIsomorphic = false;
+									break;
+							}
+					}
+					if (!isIsomorphic)
+							break;
+			}
+			if (isIsomorphic)
+					ans += 1;
+	} while (std::next_permutation(p.begin(), p.end()));
+
+	return ans;
+}
+
 int64_t countSubgraphs(Graph H, Graph G) {
 	std::vector<int64_t> factorials(21); 
 	factorials[0] = 1LL; 
@@ -16,7 +40,7 @@ int64_t countSubgraphs(Graph H, Graph G) {
 		for (int i = 0; i < cur.n; i += 1) {
 			int p = cur.dsu.get(i); 
 			if (not vis[p]) {
-				ans *= int64_t(cur.dsu.size(p) - 1); 
+				ans *= factorials[int64_t(cur.dsu.size(p) - 1)];
 				vis[p] = true; 
 			}
 		}
@@ -30,23 +54,17 @@ int64_t countSubgraphs(Graph H, Graph G) {
 		HomomorphismCounting<int64_t> homCounter(h.second, G);
 		int64_t coeff = h.first * 1LL * getBlockFactors(h.second); //(Block-Größen - 1)! von jeder Partition
 		coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); // hier evtl. h.second.n modifizeren nachdem genSpasm final implementiert
-		subgraphs += h.first * homCounter.run(); 
-		/* 
-			außerdem sollten wir die Anzahl der Vorkommnisse eines jeden Spasm Graphen
-			beim generieren des Spasms speichern als Multiplikator 
-		*/  
+		subgraphs += h.first * coeff * homCounter.run(); 
 	}
 
 	int64_t automorphisms = 0; 
 	std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 
-	//for (auto& h: connectedComponentsH)
- //   automorphisms += countAutomorphisms(h); 
+	for (auto& h: connectedComponentsH)
+   		automorphisms += countAutomorphisms(h, h); 
 
 	return subgraphs;// / automorphisms; 
 }
-
-
 
 void test_tree() {
 	int t = 5;

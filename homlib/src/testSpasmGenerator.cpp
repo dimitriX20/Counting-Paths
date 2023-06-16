@@ -38,6 +38,23 @@ void testContraction() {
     assert(contract(nwH, 0, 4) == cycle); 
 }
 
+void testOldNameContract() { // newly added might check interaction
+	Graph g(4); 
+	g.addEdge(0,1); 
+	g.addEdge(0,2); 
+	g.addEdge(0,3); 
+
+	Graph h1 = contract(g, 1, 2);
+	auto X = h1.getNonNeighbors(); // funktioniert noch nicht
+	//assert(X.size() == 1);
+
+	Graph h2 = contract(h1, 0, 2); 
+	assert(h2.dsu.size(0) == 1); 
+	assert(h2.dsu.size(1) == 3); 
+	assert(h2.oldName[0] == 1); 
+	assert(h2.oldName[1] == 0);
+}
+
 void testContractionDSU() {
     Graph g = getPk(5);
     g = contract(g, 0, 2); 
@@ -113,4 +130,5 @@ void runAllTests() {
     testIsomorph(); 
     testContraction(); 
     testGenerateSpasm();
+    testOldNameContract();
 }
