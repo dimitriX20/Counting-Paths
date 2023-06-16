@@ -39,7 +39,35 @@ void testContraction() {
 }
 
 void testContractionDSU() {
+    Graph g = getPk(5);
+    g = contract(g, 0, 2); 
+    g = contract(g, 0, 3); 
+    g = contract(g, 1, 2); 
+    assert(g.dsu.size(0) == 3); 
+    assert(g.dsu.size(1) == 2);
 
+    int prod = 1; 
+    std::vector<bool> vis(5); 
+    for (int i = 0; i < g.n; i += 1) {
+        int par = g.dsu.get(i); 
+        if (not vis[par]) {
+            vis[par] = true; 
+            prod *= g.dsu.size(par); 
+        }
+    }
+    assert(prod == 6); 
+
+    int p1 = g.dsu.get(0); 
+    assert(p1 == g.dsu.get(2));
+    assert(p1 == g.dsu.get(4));
+
+    int p2 = g.dsu.get(1); 
+    assert(p2 == g.dsu.get(3));
+
+    bool okFirstBlock = g.oldName[0] == 0 or g.oldName[0] == 2 or g.oldName[0] == 4; 
+    bool okSecondBlock = g.oldName[1] == 1 or g.oldName[1] == 3;
+    assert(okFirstBlock); 
+    assert(okSecondBlock); 
 }
 
 // void testGenerateSpasmSize() {
@@ -81,6 +109,7 @@ void testGenerateSpasm() {
 }
 
 void runAllTests() {
+    testContractionDSU;
     testIsomorph(); 
     testContraction(); 
     testGenerateSpasm();
