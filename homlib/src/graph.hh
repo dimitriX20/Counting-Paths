@@ -38,7 +38,7 @@ struct Graph {
 
 		std::vector<std::pair<int, int>> ans; 
 		std::vector<bool> vis(n); 
-		std::map<pair<int, int>, bool> done; 
+		std::map<std::pair<int, int>, bool> done; 
 
 		for (int i = 0; i < n; i += 1) {
 			int p1 = dsu.get(i); 
@@ -173,7 +173,8 @@ Graph contract(const Graph& h, int v, int u){
 	int idx = 0; 
 	std::map<int, int> nwName; 
 	nwName[v] = nwName[u] = idx; 
-	res.oldName[idx] = res.oldName[v]; 
+	std::vector<int> updOldName = res.oldName; 
+	updOldName[idx] = res.oldName[v]; 
 
 	for (int i = 0; i < h.n; i += 1) {
 		if (i == v or i == u) 
@@ -181,8 +182,10 @@ Graph contract(const Graph& h, int v, int u){
 
 		idx += 1; 
 		nwName[i] = idx; 
-		res.oldName[idx] = res.oldName[i]; 
+		updOldName[idx] = res.oldName[i]; 
 	}
+
+	res.oldName = updOldName; 
 
 	for (int i: h.adj[v]) {
 		if (i != v and i != u)
@@ -211,6 +214,7 @@ Graph contract(const Graph& h, int v, int u){
 
 	return res; 
 }
+
 
 std::vector<std::pair<int, Graph>> generateSpasm(Graph &g) {  
 		// we assume that g is the initial P_k graph
