@@ -19,7 +19,7 @@ struct Graph {
 	std::vector<int> oldName; 
 	std::map<std::pair<int, int>, std::vector<pair<int, Graph>>> mp;
 
-	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n) {
+	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n), oldName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
 	}
 
@@ -106,6 +106,7 @@ struct Graph {
 			adj = other.adj;
 			s = other.s;
 			dsu = other.dsu;
+			oldName = other.oldName; 
 	}
 
 	// Assignment operator
@@ -117,6 +118,7 @@ struct Graph {
 					adj = other.adj;
 					s = other.s;
 					dsu = DSU(other.n);
+					oldName = other.oldName;
 			}
 			return *this;
 	}

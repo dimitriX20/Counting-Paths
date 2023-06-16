@@ -58,7 +58,7 @@ void testContractionDSU() {
 // }
 
 void testGenerateSpasm() {
-    Graph p5 = getPk(3);
+    Graph p5 = getPk(5);
     auto spasm = generateSpasm(p5); 
 
     vector<Graph> need = {p5, getPk(4), getPk(3), getPk(2), contract(p5, 0, 4),
@@ -77,11 +77,11 @@ void testGenerateSpasm() {
             break; 
     }
 
-   // assert(isFine);
+    assert(isFine);
 }
 
 void runAllTests() {
     testIsomorph(); 
-    //testContraction(); 
-    //testGenerateSpasm();
+    testContraction(); 
+    testGenerateSpasm();
 }
