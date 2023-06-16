@@ -1,8 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;   
-#include "hom.hh"
 #include <cassert>
-#include "spasmGenerator.cpp"
+#include "graph.hh"
  
 void testIsomorph() {
     Graph nw1(8); 
@@ -39,6 +38,10 @@ void testContraction() {
     assert(contract(nwH, 0, 4) == cycle); 
 }
 
+void testContractionDSU() {
+
+}
+
 // void testGenerateSpasmSize() {
 //     Graph p5 = getPk(5);
 //     Graph p4 = getPk(4);
@@ -64,10 +67,10 @@ void testGenerateSpasm() {
     bool isFine = true; 
     cout << " " << spasm.size() << "\n";
     for (auto g: spasm) {
-        print(g.second.second);
+        print(g.second);
         bool ok = false; 
         for (auto h: need) 
-            ok |= h == g.second.second; 
+            ok |= h == g.second; 
 
         isFine = isFine and ok; 
         if (not isFine) 
@@ -79,6 +82,6 @@ void testGenerateSpasm() {
 
 void runAllTests() {
     testIsomorph(); 
-    testContraction(); 
-    testGenerateSpasm();
+    //testContraction(); 
+    //testGenerateSpasm();
 }

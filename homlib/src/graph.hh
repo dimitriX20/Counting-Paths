@@ -16,9 +16,12 @@ struct Graph {
 	DSU dsu;  
 	std::vector<std::vector<int>> adj;
 	std::vector<std::set<int>> s; 
+	std::vector<int> oldName; 
 	std::map<std::pair<int, int>, std::vector<pair<int, Graph>>> mp;
 
-	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n) {}
+	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n) {
+		std::iota(oldName.begin(), oldName.end(), 0); 
+	}
 
 	void addEdge(int u, int v) {
 		adj[u].push_back(v);
@@ -151,25 +154,24 @@ void print(const Graph& g) {
 	}
 }
 
-
-Graph contractNw(const Graph& h, int v, int u){
-	if (v >= h.n or u >= h.n) 
-		return Graph(0); 
-
-	Graph res = h; 
-
-}
-
 Graph contract(const Graph& h, int v, int u){
 	if (v >= h.n or u >= h.n) 
 		return Graph(0); 
 
 	Graph res(h.n - 1);
 	std::set<int> allNeighbors; 
+	res.dsu = h.dsu; 
+
+	res.oldName = h.oldName; 
+	int p1 = res.dsu.get(res.oldName[v]); 
+	int p2 = res.dsu.get(res.oldName[u]); 
+//assert(not p1 == p2); 
+	res.dsu.unite(p1, p2);
 	
 	int idx = 0; 
 	std::map<int, int> nwName; 
 	nwName[v] = nwName[u] = idx; 
+	res.oldName[idx] = res.oldName[v]; 
 
 	for (int i = 0; i < h.n; i += 1) {
 		if (i == v or i == u) 
@@ -177,6 +179,7 @@ Graph contract(const Graph& h, int v, int u){
 
 		idx += 1; 
 		nwName[i] = idx; 
+		res.oldName[idx] = res.oldName[i]; 
 	}
 
 	for (int i: h.adj[v]) {
@@ -289,45 +292,45 @@ std::vector<Graph> connectedComponents(Graph G) {
 	return components;
 }
  
-int64_t countSubgraphs(Graph H, Graph G) {
-	std::vector<int64_t> factorials(21); 
-	factorials[0] = 1LL; 
+// int64_t countSubgraphs(Graph H, Graph G) {
+// 	std::vector<int64_t> factorials(21); 
+// 	factorials[0] = 1LL; 
 
-	for (int64_t i = 1; i < 21LL; i += 1LL) 
-		factorials[i] = factorials[i - 1] * i; 
+// 	for (int64_t i = 1; i < 21LL; i += 1LL) 
+// 		factorials[i] = factorials[i - 1] * i; 
 	
-	auto getBlockFactors = [&](Graph& cur) -> int64_t {
-		int64_t ans = 1; 
-		std::vector<bool> vis(cur.n); 
-		for (int i = 0; i < cur.n; i += 1) {
-			int p = cur.dsu.get(i); 
-			if (not vis[p]) {
-				ans *= int64_t(cur.dsu.size(p) - 1); 
-				vis[p] = true; 
-			}
-		}
-		return ans; 
-	}; 
+// 	auto getBlockFactors = [&](Graph& cur) -> int64_t {
+// 		int64_t ans = 1; 
+// 		std::vector<bool> vis(cur.n); 
+// 		for (int i = 0; i < cur.n; i += 1) {
+// 			int p = cur.dsu.get(i); 
+// 			if (not vis[p]) {
+// 				ans *= int64_t(cur.dsu.size(p) - 1); 
+// 				vis[p] = true; 
+// 			}
+// 		}
+// 		return ans; 
+// 	}; 
 
-	std::vector<std::pair<int, Graph>> spasm = generateSpasm(H); 
-	int64_t subgraphs = 0; 
+// 	std::vector<std::pair<int, Graph>> spasm = generateSpasm(H); 
+// 	int64_t subgraphs = 0; 
 
-	for (auto& h: spasm) {
-		HomomorphismCounting<int64_t> homCounter(h.second, G);
-		int64_t coeff = h.first * 1LL * getBlockFactors(h.second); //(Block-Größen - 1)! von jeder Partition
-		coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); // hier evtl. h.second.n modifizeren nachdem genSpasm final implementiert
-		subgraphs += h.first * homCounter.run(); 
-		/* 
-			außerdem sollten wir die Anzahl der Vorkommnisse eines jeden Spasm Graphen
-			beim generieren des Spasms speichern als Multiplikator 
-		*/  
-	}
+// 	for (auto& h: spasm) {
+// 		HomomorphismCounting<int64_t> homCounter(h.second, G);
+// 		int64_t coeff = h.first * 1LL * getBlockFactors(h.second); //(Block-Größen - 1)! von jeder Partition
+// 		coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); // hier evtl. h.second.n modifizeren nachdem genSpasm final implementiert
+// 		subgraphs += h.first * homCounter.run(); 
+// 		/* 
+// 			außerdem sollten wir die Anzahl der Vorkommnisse eines jeden Spasm Graphen
+// 			beim generieren des Spasms speichern als Multiplikator 
+// 		*/  
+// 	}
 
-	int64_t automorphisms = 0; 
-	std::vector<Graph> connectedComponentsH = connectedComponents(H); 
+// 	int64_t automorphisms = 0; 
+// 	std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 
-	//for (auto& h: connectedComponentsH)
- //   automorphisms += countAutomorphisms(h); 
+// 	//for (auto& h: connectedComponentsH)
+//  //   automorphisms += countAutomorphisms(h); 
 
-	return subgraphs;// / automorphisms; 
-}
+// 	return subgraphs;// / automorphisms; 
+// }
