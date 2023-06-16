@@ -17,7 +17,7 @@ struct Graph {
 	std::vector<std::vector<int>> adj;
 	std::vector<std::set<int>> s; 
 	std::vector<int> oldName; 
-	std::map<std::pair<int, int>, std::vector<std::pair<int, Graph>>> mp;
+	std::vector<std::pair<int, Graph>> spasms;
 
 	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n), oldName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
@@ -29,32 +29,44 @@ struct Graph {
 		s[u].insert(v); 
 		s[v].insert(u); 
 		m += 1;
+		spasms.clear();
 	}
 
-	std::vector<std::pair<int, int>> getNonNeighbors() {
-		auto notNeighbors = [&](int u, int v) -> bool {
-			return u != v and s[u].find(v) == s[u].end(); 
-		}; 
-
+	  std::vector<std::pair<int, int>> getNonNeighbors() {
 		std::vector<std::pair<int, int>> ans; 
-		std::vector<bool> vis(n); 
-		std::map<std::pair<int, int>, bool> done; 
-
 		for (int i = 0; i < n; i += 1) {
-			int p1 = dsu.get(i); 
-			if (not vis[p1]) {
-				vis[p1] = true; 
-				for (int j = i + 1; j < n; j += 1) {
-					int p2 = dsu.get(j); 
-					if (not done[{p1, p2}] and notNeighbors(p1, p2)) {
-						done[{p1, p2}] = done[{p2, p1}] = true; 
-						ans.emplace_back(p1, p2); 
-					}
-				}
+			for (int j = i + 1; j < n; j += 1) {
+				if (s[i].find(j) == s[i].end()) 
+					ans.emplace_back(i, j); 
 			}
 		}
 		return ans; 
 	}
+
+	// std::vector<std::pair<int, int>> getNonNeighbors() {
+	// 	auto notNeighbors = [&](int u, int v) -> bool {
+	// 		return u != v and s[u].find(v) == s[u].end(); 
+	// 	}; 
+
+	// 	std::vector<std::pair<int, int>> ans; 
+	// 	std::vector<bool> vis(n); 
+	// 	std::map<std::pair<int, int>, bool> done; 
+
+	// 	for (int i = 0; i < n; i += 1) {
+	// 		int p1 = dsu.get(i); 
+	// 		if (not vis[p1]) {
+	// 			vis[p1] = true; 
+	// 			for (int j = i + 1; j < n; j += 1) {
+	// 				int p2 = dsu.get(j); 
+	// 				if (not done[{p1, p2}] and notNeighbors(p1, p2)) {
+	// 					done[{p1, p2}] = done[{p2, p1}] = true; 
+	// 					ans.emplace_back(p1, p2); 
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	return ans; 
+	// }
 
 		// Check whether two graphs are isomorphic.
 	bool isomorphic(const Graph &h) { 
@@ -216,7 +228,11 @@ Graph contract(const Graph& h, int v, int u){
 }
 
 
-std::vector<std::pair<int, Graph>> generateSpasm(Graph &g) {  
+std::map<std::pair<int, int>, std::vector<std::pair<int, Graph>>> mp; // global map to store all graphs and multiplicators 
+void generateSpasm(Graph &g) {  
+		if (g.spasms.size() == 0) 
+			g.spasms.emplace_back(1, g);
+
 		// we assume that g is the initial P_k graph
 		// Get all pairs of non-neighboring vertices.
 		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
@@ -230,7 +246,7 @@ std::vector<std::pair<int, Graph>> generateSpasm(Graph &g) {
 
 				// Check if a graph isomorphic to the new graph is already in mp[key].
 				bool isomorphicExists = false;
-				for (auto &pairInMap : g.mp[key]) {
+				for (auto &pairInMap : mp[key]) {
 						if (newGraph == pairInMap.second) {
 								isomorphicExists = true;  
 								pairInMap.first += 1;
@@ -239,21 +255,18 @@ std::vector<std::pair<int, Graph>> generateSpasm(Graph &g) {
 				}
 
 				// If no isomorphic graph is in the map, add the new graph.
-				if (!isomorphicExists) {
-						g.mp[key].push_back({1, newGraph});
+				if (!isomorphicExists) { 
+						mp[key].push_back({1, newGraph});
 						generateSpasm(newGraph);
 				}
 		}
 
 		// Concatenate all vectors in mp to get the final result.
-		std::vector<std::pair<int, Graph>> spasms = {{1, g}};
-		for (auto &pair : g.mp) {
-				for (auto &graphPair : pair.second) {
-						spasms.emplace_back(graphPair);
+		for (auto &pair: mp) {
+				for (auto &graphPair: pair.second) {
+						g.spasms.emplace_back(graphPair);
 				}
 		}
- 
-		return spasms;
 }
 
 bool isTree(Graph G) {
@@ -317,46 +330,3 @@ Graph createPetersonGraph() {
     peterson.addEdge(8, 5);
     return peterson;
 }
-
-// int64_t countSubgraphs(Graph H, Graph G) {
-// 	std::vector<int64_t> factorials(21); 
-// 	factorials[0] = 1LL; 
-
-// 	for (int64_t i = 1; i < 21LL; i += 1LL) 
-// 		factorials[i] = factorials[i - 1] * i; 
-	
-// 	auto getBlockFactors = [&](Graph& cur) -> int64_t {
-// 		int64_t ans = 1; 
-// 		std::vector<bool> vis(cur.n); 
-// 		for (int i = 0; i < cur.n; i += 1) {
-// 			int p = cur.dsu.get(i); 
-// 			if (not vis[p]) {
-// 				ans *= int64_t(cur.dsu.size(p) - 1); 
-// 				vis[p] = true; 
-// 			}
-// 		}
-// 		return ans; 
-// 	}; 
-
-// 	std::vector<std::pair<int, Graph>> spasm = generateSpasm(H); 
-// 	int64_t subgraphs = 0; 
-
-// 	for (auto& h: spasm) {
-// 		HomomorphismCounting<int64_t> homCounter(h.second, G);
-// 		int64_t coeff = h.first * 1LL * getBlockFactors(h.second); //(Block-Größen - 1)! von jeder Partition
-// 		coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); // hier evtl. h.second.n modifizeren nachdem genSpasm final implementiert
-// 		subgraphs += h.first * homCounter.run(); 
-// 		/* 
-// 			außerdem sollten wir die Anzahl der Vorkommnisse eines jeden Spasm Graphen
-// 			beim generieren des Spasms speichern als Multiplikator 
-// 		*/  
-// 	}
-
-// 	int64_t automorphisms = 0; 
-// 	std::vector<Graph> connectedComponentsH = connectedComponents(H); 
-
-// 	//for (auto& h: connectedComponentsH)
-//  //   automorphisms += countAutomorphisms(h); 
-
-// 	return subgraphs;// / automorphisms; 
-// }

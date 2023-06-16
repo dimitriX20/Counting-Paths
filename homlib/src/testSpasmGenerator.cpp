@@ -44,9 +44,13 @@ void testOldNameContract() { // newly added might check interaction
 	g.addEdge(0,2); 
 	g.addEdge(0,3); 
 
+    generateSpasm(g); 
+    auto Y = g.spasms;
+    assert(Y.size() == 3); // funktioniert noch nicht
+
 	Graph h1 = contract(g, 1, 2);
 	auto X = h1.getNonNeighbors(); // funktioniert noch nicht
-	//assert(X.size() == 1);
+	assert(X.size() == 1);
 
 	Graph h2 = contract(h1, 0, 2); 
 	assert(h2.dsu.size(0) == 1); 
@@ -104,15 +108,14 @@ void testContractionDSU() {
 
 void testGenerateSpasm() {
     Graph p5 = getPk(5);
-    auto spasm = generateSpasm(p5); 
+    generateSpasm(p5); 
+    auto spasm = p5.spasms;
 
     vector<Graph> need = {p5, getPk(4), getPk(3), getPk(2), contract(p5, 0, 4),
                          contract(p5, 0, 3), contract(getPk(4), 0, 3), contract(getPk(5), 1, 3)};
 
-    bool isFine = true; 
-    cout << " " << spasm.size() << "\n";
-    for (auto g: spasm) {
-        print(g.second);
+    bool isFine = true;  
+    for (auto g: spasm) { 
         bool ok = false; 
         for (auto h: need) 
             ok |= h == g.second; 
@@ -126,9 +129,9 @@ void testGenerateSpasm() {
 }
 
 void runAllTests() {
+    testOldNameContract();
     testContractionDSU;
     testIsomorph(); 
     testContraction(); 
     testGenerateSpasm();
-    testOldNameContract();
 }

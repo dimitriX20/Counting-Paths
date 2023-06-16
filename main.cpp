@@ -47,7 +47,8 @@ int64_t countSubgraphs(Graph H, Graph G) {
 		return ans; 
 	}; 
 
-	std::vector<std::pair<int, Graph>> spasm = generateSpasm(H); 
+	generateSpasm(H);
+	std::vector<std::pair<int, Graph>> spasm = H.spasms; 
 	int64_t subgraphs = 0; 
 
 	for (auto& h: spasm) {
@@ -92,8 +93,8 @@ void test_tree() {
 int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
-	Graph G(1);  
-	test_tree();
+	//Graph G(1);  
+	//test_tree();
 	runAllTests();
 	return 0;
 }
