@@ -55,7 +55,9 @@ int64_t countSubgraphs(Graph H, Graph G) {
 		HomomorphismCounting<int64_t> homCounter(h.second, G);
 		int64_t coeff = h.first * 1LL * getBlockFactors(h.second); //(Block-Größen - 1)! von jeder Partition
 		coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); // hier evtl. h.second.n modifizeren nachdem genSpasm final implementiert
-		subgraphs += h.first * coeff * homCounter.run(); 
+		//print(h.second); 
+		//cout << " h.first: " << h.first << " coeff:" << coeff << "\n";
+		subgraphs += coeff * homCounter.run(); 
 	}
 
 	int64_t automorphisms = 0; 
@@ -64,7 +66,8 @@ int64_t countSubgraphs(Graph H, Graph G) {
 	for (auto& h: connectedComponentsH)
    		automorphisms += countAutomorphisms(h, h); 
 
-	return subgraphs;// / automorphisms; 
+	//cout << " " << automorphisms << "\n"; 
+	return subgraphs / automorphisms; 
 }
 
 void test_tree() {
@@ -87,14 +90,25 @@ void test_tree() {
 	cout << hom.run() << "\n";
 	cout << homTree.run() << "\n";
 	assert(hom.run() == homTree.run());
-	}
+}
+
+void testCountSubgraphs() {
+	Graph peter = createPetersonGraph(); 
+	Graph K13(4); 
+	K13.addEdge(0,1); 
+	K13.addEdge(0,2); 
+	K13.addEdge(0,3);
+	assert(countSubgraphs(K13, peter) == 10); 
+}
  
 
 int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
+
+	testCountSubgraphs();
+	runAllTests();
 	//Graph G(1);  
 	//test_tree();
-	runAllTests();
 	return 0;
 }

@@ -91,20 +91,6 @@ void testContractionDSU() {
     assert(okSecondBlock); 
 }
 
-// void testGenerateSpasmSize() {
-//     Graph p5 = getPk(5);
-//     Graph p4 = getPk(4);
-//     Graph p3 = getPk(3); 
-
-//     //assert(generateSpasm(p5).size() == 8); 
-//     auto X = generateSpasm(p3); 
-//     cout << " " << p3.n << " " << p3.m << "\n";
-//     cout << X.size() << "\n";
-//     for (auto i: X)
-//         print(i);
-// // assert(generateSpasm(p4).size() == 4); 
-//   //  assert(generateSpasm(p3).size() == 2);
-// }
 
 void testGenerateSpasm() {
     Graph p5 = getPk(5);
