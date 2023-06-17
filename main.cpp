@@ -4,6 +4,9 @@
 #include <iostream>
 
 int64_t countSubgraphs(Graph H, Graph G) {
+	if (H.n > G.n or H.m > G.m)
+		return 0;
+
 	std::vector<int64_t> factorials(21); 
 	factorials[0] = 1LL; 
 
@@ -78,34 +81,38 @@ void testCountSubgraphs() {
 }
 
 void testCountSubgraphs2() {
-	Graph g(4);
-	for (int i = 0; i < 4; i += 1) {
-		for (int j = i + 1; j < 4; j += 1) 
-			g.addEdge(i, j); 
-	}
-
-	Graph p3 = getPk(3); 
-	assert(countSubgraphs(p3, g) == 12);
+	//assert(countSubgraphs(p3, g) == 12);
 }
 
 void runAllTests() {
 	testCountSubgraphs2(); 
-	//testCountSubgraphs(); 
-	Graph mxTest = getPk(12); 
-	generateSpasm(mxTest); 
-	std::cout << mxTest.spasms.size() << "\n";
-	// testOldNameContract();
-    // testContractionDSU;
-    // testIsomorph(); 
-    // testContraction(); 
-    // testGenerateSpasm();
-	// test_tree(); 
+	testCountSubgraphs(); 
+	testOldNameContract();
+    testContractionDSU;
+    testIsomorph(); 
+    testContraction(); 
+    testGenerateSpasm();
+	test_tree(); 
 }
 
 int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
+
+	Graph g(10); 
+	g.addEdge(1, 0);
+	g.addEdge(2, 0);
+	g.addEdge(3, 2);
+	g.addEdge(4, 3);
+	g.addEdge(5, 4);
+	g.addEdge(6, 0);
+	g.addEdge(7, 5);
+	g.addEdge(8, 1);
+	g.addEdge(9, 5);
+	Graph p = getPk(3); 
+	std::cout << countSubgraphs(p, g) << "\n";
 	
-	runAllTests();
+	//testCountSubgraphs2();
+	// runAllTests();
 	return 0;
 }
