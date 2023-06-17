@@ -108,47 +108,50 @@ struct Graph {
 		return k == m_value*(size_t)n_value;
 	}
 
-	// Check whether two graphs are isomorphic.
-	bool isomorphic(const Graph &h) { 
-			if (n != h.n)
-					return false;
+	int64_t countAutomorphisms() {
+		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
+			int n_value = g.n;
+			g1_sz = 0; // Initialize the size of g1 to be 0
+			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
+			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
+			EMPTYGRAPH(g1, m_value, n_value);
+			
+			for (int i = 0; i < n_value; ++i) {
+				for (int j : g.adj[i]) {
+					ADDONEEDGE(g1, i, j, m_value);
+				}
+			}
+		}; 
 
-			// Create vectors of degrees
-			std::vector<int> deg1(n);
-			std::vector<int> deg2(h.n);
+		DYNALLSTAT(int, lab, lab_sz);
+		DYNALLSTAT(int, ptn, ptn_sz);
+		DYNALLSTAT(int, orbits, orbits_sz);
+		DYNALLSTAT(graph, g, g_sz);
+		static DEFAULTOPTIONS_GRAPH(options);
+		statsblk stats;
 
-			for (int i = 0; i < n; i++)
-					deg1[i] = adj[i].size();
+		int m, n;
+		n = this->n;
+		m = SETWORDSNEEDED(n);
+		nauty_check(WORDSIZE, m, n, NAUTYVERSIONID);
 
-			for (int i = 0; i < h.n; i++)
-					deg2[i] = h.adj[i].size();
+		DYNALLOC1(int, lab, lab_sz, n, "malloc");
+		DYNALLOC1(int, ptn, ptn_sz, n, "malloc");
+		DYNALLOC1(int, orbits, orbits_sz, n, "malloc");
 
-			std::sort(deg1.begin(), deg1.end());
-			std::sort(deg2.begin(), deg2.end());
-			if (deg1 != deg2)
-					return false;
-	
-			std::vector<int> p(h.n);
-			std::iota(p.begin(), p.end(), 0);
+		graph *gp = NULL;
+		size_t gp_sz = 0;
+		convertToNautyGraph(*this, gp, gp_sz, m);
 
-			do {
-					bool isIsomorphic = true;
-					for (int i = 0; i < n; i++) {
-							for (int j : s[i]) {
-									if (h.s[p[i]].find(p[j]) == h.s[p[i]].end()) {
-											isIsomorphic = false;
-											break;
-									}
-							}
-							if (!isIsomorphic)
-									break;
-					}
-					if (isIsomorphic)
-							return true;
-			} while (std::next_permutation(p.begin(), p.end()));
+		DYNALLOC2(graph, g, g_sz, n, m, "malloc");
 
-			return false;
-	}
+		options.getcanon = TRUE;
+
+		densenauty(gp, lab, ptn, orbits, &options, &stats, m, n, g);
+
+		// Returning automorphism group size as a 64 bit integer
+		return stats.grpsize1;
+  }
 
 	// Copy constructor
 	Graph(const Graph& other) {
@@ -182,7 +185,7 @@ struct Graph {
 
 	//not equal operator
 	bool operator!=(const Graph other) {
-			return not isomorphic(other);
+			return not isIsomorphic(other);
 	}
 };
 
@@ -273,18 +276,13 @@ void generateSpasm(Graph &g) {
 		if (g.spasms.size() == 0) 
 			g.spasms.emplace_back(1, g);
 
-		// we assume that g is the initial P_k graph
-		// Get all pairs of non-neighboring vertices.
 		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
-
 		for (auto &pair : pairs) {
-				// Contract the graph at the given vertices.
 				Graph newGraph = contract(g, pair.first, pair.second);
 
 				// Create a key for the map based on the number of nodes and edges.
 				std::pair<int, int> key = {newGraph.n, newGraph.m};
 
-				// Check if a graph isomorphic to the new graph is already in mp[key].
 				bool isomorphicExists = false;
 				for (auto &pairInMap : mp[key]) {
 						if (newGraph == pairInMap.second) {
@@ -294,14 +292,12 @@ void generateSpasm(Graph &g) {
 						}
 				}
 
-				// If no isomorphic graph is in the map, add the new graph.
 				if (!isomorphicExists) { 
 						mp[key].push_back({1, newGraph});
 						generateSpasm(newGraph);
 				}
 		}
 
-		// Concatenate all vectors in mp to get the final result.
 		for (auto &pair: mp) {
 				for (auto &graphPair: pair.second) {
 						g.spasms.emplace_back(graphPair);
@@ -312,42 +308,58 @@ void generateSpasm(Graph &g) {
 bool isTree(Graph G) {
 	std::vector<int> parent(G.n, -1);
 	std::vector<int> stack = {0};
+	
 	for (int i = 0; i < stack.size(); ++i) {
 		int u = stack[i];
 		for (int v: G.adj[u]) {
-			if (v == parent[u]) continue;
-			if (parent[v] >= 0) return false;
+			if (v == parent[u]) 
+				continue;
+				
+			if (parent[v] >= 0) 
+				return false;
+				
 			parent[v] = u;
 			stack.push_back(v);
 		}
 	}
+
 	return stack.size() == G.n;
 }
 
 std::vector<Graph> connectedComponents(Graph G) {
 	std::vector<int> index(G.n, -1);
 	std::vector<Graph> components;
+
 	for (int s = 0; s < G.n; ++s) {
-		if (index[s] >= 0) continue;
+		if (index[s] >= 0) 
+			continue;
+
 		index[s] = 0;
 		std::vector<int> stack = {s};
+
 		for (int i = 0; i < stack.size(); ++i) {
 			int u = stack[i];
 			for (int v: G.adj[u]) {
-				if (index[v] >= 0) continue;
+				if (index[v] >= 0) 
+					continue;
+
 				index[v] = stack.size();
 				stack.emplace_back(v);
 			}
 		}
+
 		Graph H(stack.size());
 		for (int u: stack) {
 			for (int v: G.adj[u]) {
-				if (u >= v) continue;
+				if (u >= v) 
+					continue;
+				
 				H.addEdge(index[u], index[v]);
 			}
 		}
 		components.emplace_back(H);
 	}
+
 	return components;
 }
 

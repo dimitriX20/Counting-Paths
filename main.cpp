@@ -3,30 +3,6 @@
 #include <vector>
 #include <iostream>
 
-int64_t countAutomorphisms(const Graph &h, const Graph& g) { 
-	int64_t ans = 0; 
-	std::vector<int> p(h.n);
-	std::iota(p.begin(), p.end(), 0);
-
-	do {
-			bool isIsomorphic = true;
-			for (int i = 0; i < g.n; i++) {
-					for (int j : g.s[i]) {
-							if (h.s[p[i]].find(p[j]) == h.s[p[i]].end()) {
-									isIsomorphic = false;
-									break;
-							}
-					}
-					if (!isIsomorphic)
-							break;
-			}
-			if (isIsomorphic)
-					ans += 1;
-	} while (std::next_permutation(p.begin(), p.end()));
-
-	return ans;
-}
-
 int64_t countSubgraphs(Graph H, Graph G) {
 	std::vector<int64_t> factorials(21); 
 	factorials[0] = 1LL; 
@@ -64,7 +40,7 @@ int64_t countSubgraphs(Graph H, Graph G) {
 	std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 
 	for (auto& h: connectedComponentsH)
-   		automorphisms += countAutomorphisms(h, h); 
+   		automorphisms += h.countAutomorphisms();
 
 	//cout << " " << automorphisms << "\n"; 
 	return subgraphs / automorphisms; 
@@ -106,8 +82,14 @@ int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
 
-	Graph g = getPk(6); 
-	Graph h = createPetersonGraph(); 
+	Graph g(4);
+	for (int i = 0; i < 4; i += 1) {
+		for (int j = i + 1; j < 4; j += 1) 
+			g.addEdge(i, j); 
+	}
+
+	Graph p3 = getPk(3); 
+	assert(countSubgraphs(p3, g) == 12);
 
 	//std::cout << bool(g == h) << " " << g.isIsomorphic(h) << "\n";
 	testCountSubgraphs();
