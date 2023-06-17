@@ -6,7 +6,12 @@
 #include <map>
 #include <algorithm>
 #include <numeric>   
-#include "dsu.cpp"  
+#include "dsu.cpp"
+
+extern "C" {
+	#include "nauty.h"
+	#include "naututil.h"
+}
 //#include <mutex>
 
 //std::mutex graphMutex;
@@ -43,32 +48,67 @@ struct Graph {
 		return ans; 
 	}
 
-	// std::vector<std::pair<int, int>> getNonNeighbors() {
-	// 	auto notNeighbors = [&](int u, int v) -> bool {
-	// 		return u != v and s[u].find(v) == s[u].end(); 
-	// 	}; 
 
-	// 	std::vector<std::pair<int, int>> ans; 
-	// 	std::vector<bool> vis(n); 
-	// 	std::map<std::pair<int, int>, bool> done; 
+	bool isIsomorphic(const Graph& h) {
+		if (h.n != this->n || h.m != this->m)
+			return false;
 
-	// 	for (int i = 0; i < n; i += 1) {
-	// 		int p1 = dsu.get(i); 
-	// 		if (not vis[p1]) {
-	// 			vis[p1] = true; 
-	// 			for (int j = i + 1; j < n; j += 1) {
-	// 				int p2 = dsu.get(j); 
-	// 				if (not done[{p1, p2}] and notNeighbors(p1, p2)) {
-	// 					done[{p1, p2}] = done[{p2, p1}] = true; 
-	// 					ans.emplace_back(p1, p2); 
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	return ans; 
-	// }
+		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
+			int n_value = g.n;
+			g1_sz = 0; // Initialize the size of g1 to be 0
+			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
+			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
+			EMPTYGRAPH(g1, m_value, n_value);
+			
+			for (int i = 0; i < n_value; ++i) {
+				for (int j : g.adj[i]) {
+					ADDONEEDGE(g1, i, j, m_value);
+				}
+			}
+		}; 
 
-		// Check whether two graphs are isomorphic.
+		DYNALLSTAT(int, lab1, lab1_sz);
+		DYNALLSTAT(int, lab2, lab2_sz);
+		DYNALLSTAT(int, ptn, ptn_sz);
+		DYNALLSTAT(int, orbits, orbits_sz);
+		DYNALLSTAT(int, map, map_sz);
+		DYNALLSTAT(graph, cg1, cg1_sz);
+		DYNALLSTAT(graph, cg2, cg2_sz);
+		static DEFAULTOPTIONS_GRAPH(options);
+		statsblk stats;
+
+		int m_value, n_value;
+		size_t k, g1_sz = 0, g2_sz = 0; // Declare g1_sz and g2_sz
+
+		options.getcanon = TRUE;
+
+		n_value = this->n;
+		m_value = SETWORDSNEEDED(n_value);
+		nauty_check(WORDSIZE, m_value, n_value, NAUTYVERSIONID);
+
+		DYNALLOC1(int, lab1, lab1_sz, n_value, "malloc");
+		DYNALLOC1(int, lab2, lab2_sz, n_value, "malloc");
+		DYNALLOC1(int, ptn, ptn_sz, n_value, "malloc");
+		DYNALLOC1(int, orbits, orbits_sz, n_value, "malloc");
+		DYNALLOC1(int, map, map_sz, n_value, "malloc");
+
+		graph *g1 = NULL, *g2 = NULL;
+		convertToNautyGraph(*this, g1, g1_sz, m_value);  // Converting this graph to nauty graph
+		convertToNautyGraph(h, g2, g2_sz, m_value);  // Converting graph h to nauty graph
+
+		DYNALLOC2(graph, cg1, cg1_sz, n_value, m_value, "malloc");
+		DYNALLOC2(graph, cg2, cg2_sz, n_value, m_value, "malloc");
+
+		densenauty(g1, lab1, ptn, orbits, &options, &stats, m_value, n_value, cg1);
+		densenauty(g2, lab2, ptn, orbits, &options, &stats, m_value, n_value, cg2);
+
+		for (k = 0; k < m_value*(size_t)n_value; ++k)
+			if (cg1[k] != cg2[k]) break;
+
+		return k == m_value*(size_t)n_value;
+	}
+
+	// Check whether two graphs are isomorphic.
 	bool isomorphic(const Graph &h) { 
 			if (n != h.n)
 					return false;
@@ -137,7 +177,7 @@ struct Graph {
 
 	// equal operator
 	bool operator==(const Graph other) {
-			return isomorphic(other);
+			return isIsomorphic(other);
 	}
 
 	//not equal operator

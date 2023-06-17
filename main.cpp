@@ -1,7 +1,7 @@
-#include <bits/stdc++.h>
-using namespace std;   
 #include "hom.hh" // achte auf doppeltes include, wenn spasm wieder auskommentiert 
 #include "testSpasmGenerator.cpp"
+#include <vector>
+#include <iostream>
 
 int64_t countAutomorphisms(const Graph &h, const Graph& g) { 
 	int64_t ans = 0; 
@@ -106,6 +106,10 @@ int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
 
+	Graph g = getPk(6); 
+	Graph h = createPetersonGraph(); 
+
+	//std::cout << bool(g == h) << " " << g.isIsomorphic(h) << "\n";
 	testCountSubgraphs();
 	runAllTests();
 	//Graph G(1);  
