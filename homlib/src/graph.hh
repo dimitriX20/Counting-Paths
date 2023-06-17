@@ -271,20 +271,14 @@ Graph contract(const Graph& h, int v, int u){
 }
 
 
-std::map<std::pair<int, int>, std::vector<std::pair<int, Graph>>> mp; // global map to store all graphs and multiplicators 
-void generateSpasm(Graph &g) {  
-		if (g.spasms.size() == 0) 
-			g.spasms.emplace_back(1, g);
-
+std::vector<std::pair<int, Graph>> mp; // global map to store all graphs and multiplicators 
+void generateSpHelper(Graph& g) {
 		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
 		for (auto &pair : pairs) {
 				Graph newGraph = contract(g, pair.first, pair.second);
 
-				// Create a key for the map based on the number of nodes and edges.
-				std::pair<int, int> key = {newGraph.n, newGraph.m};
-
 				bool isomorphicExists = false;
-				for (auto &pairInMap : mp[key]) {
+				for (auto &pairInMap : mp) {
 						if (newGraph == pairInMap.second) {
 								isomorphicExists = true;  
 								pairInMap.first += 1;
@@ -293,16 +287,17 @@ void generateSpasm(Graph &g) {
 				}
 
 				if (!isomorphicExists) { 
-						mp[key].push_back({1, newGraph});
-						generateSpasm(newGraph);
+						mp.push_back({1, newGraph});
+						generateSpHelper(newGraph);
 				}
 		}
+}
 
-		for (auto &pair: mp) {
-				for (auto &graphPair: pair.second) {
-						g.spasms.emplace_back(graphPair);
-				}
-		}
+void generateSpasm(Graph &g) {   
+		g.spasms.emplace_back(1, g);
+		generateSpHelper(g);
+		for (auto &pair: mp) 
+				g.spasms.emplace_back(pair);
 }
 
 bool isTree(Graph G) {

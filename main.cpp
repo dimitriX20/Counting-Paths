@@ -89,20 +89,23 @@ void testCountSubgraphs2() {
 }
 
 void runAllTests() {
-	testCountSubgraphs(); 
 	testCountSubgraphs2(); 
-	testOldNameContract();
-    testContractionDSU;
-    testIsomorph(); 
-    testContraction(); 
-    testGenerateSpasm();
-	test_tree(); 
+	//testCountSubgraphs(); 
+	Graph mxTest = getPk(12); 
+	generateSpasm(mxTest); 
+	std::cout << mxTest.spasms.size() << "\n";
+	// testOldNameContract();
+    // testContractionDSU;
+    // testIsomorph(); 
+    // testContraction(); 
+    // testGenerateSpasm();
+	// test_tree(); 
 }
 
 int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
-
+	
 	runAllTests();
 	return 0;
 }
