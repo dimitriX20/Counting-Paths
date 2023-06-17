@@ -76,12 +76,8 @@ void testCountSubgraphs() {
 	K13.addEdge(0,3);
 	assert(countSubgraphs(K13, peter) == 10); 
 }
- 
 
-int main() {
-	ios::sync_with_stdio(false); 
-	cin.tie(0);  
-
+void testCountSubgraphs2() {
 	Graph g(4);
 	for (int i = 0; i < 4; i += 1) {
 		for (int j = i + 1; j < 4; j += 1) 
@@ -90,11 +86,23 @@ int main() {
 
 	Graph p3 = getPk(3); 
 	assert(countSubgraphs(p3, g) == 12);
+}
 
-	//std::cout << bool(g == h) << " " << g.isIsomorphic(h) << "\n";
-	testCountSubgraphs();
+void runAllTests() {
+	testCountSubgraphs(); 
+	testCountSubgraphs2(); 
+	testOldNameContract();
+    testContractionDSU;
+    testIsomorph(); 
+    testContraction(); 
+    testGenerateSpasm();
+	test_tree(); 
+}
+
+int main() {
+	ios::sync_with_stdio(false); 
+	cin.tie(0);  
+
 	runAllTests();
-	//Graph G(1);  
-	//test_tree();
 	return 0;
 }
