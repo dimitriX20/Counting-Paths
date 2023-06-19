@@ -113,11 +113,3 @@ void testGenerateSpasm() {
 
     assert(isFine);
 }
-
-void runAllTests() {
-    testOldNameContract();
-    testContractionDSU;
-    testIsomorph(); 
-    testContraction(); 
-    testGenerateSpasm();
-}

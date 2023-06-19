@@ -1,33 +1,12 @@
-#include <bits/stdc++.h>
-using namespace std;   
 #include "hom.hh" // achte auf doppeltes include, wenn spasm wieder auskommentiert 
 #include "testSpasmGenerator.cpp"
-
-int64_t countAutomorphisms(const Graph &h, const Graph& g) { 
-	int64_t ans = 0; 
-	std::vector<int> p(h.n);
-	std::iota(p.begin(), p.end(), 0);
-
-	do {
-			bool isIsomorphic = true;
-			for (int i = 0; i < g.n; i++) {
-					for (int j : g.s[i]) {
-							if (h.s[p[i]].find(p[j]) == h.s[p[i]].end()) {
-									isIsomorphic = false;
-									break;
-							}
-					}
-					if (!isIsomorphic)
-							break;
-			}
-			if (isIsomorphic)
-					ans += 1;
-	} while (std::next_permutation(p.begin(), p.end()));
-
-	return ans;
-}
+#include <vector>
+#include <iostream>
 
 int64_t countSubgraphs(Graph H, Graph G) {
+	if (H.n > G.n or H.m > G.m)
+		return 0;
+
 	std::vector<int64_t> factorials(21); 
 	factorials[0] = 1LL; 
 
@@ -64,7 +43,7 @@ int64_t countSubgraphs(Graph H, Graph G) {
 	std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 
 	for (auto& h: connectedComponentsH)
-   		automorphisms += countAutomorphisms(h, h); 
+   		automorphisms += h.countAutomorphisms();
 
 	//cout << " " << automorphisms << "\n"; 
 	return subgraphs / automorphisms; 
@@ -100,15 +79,40 @@ void testCountSubgraphs() {
 	K13.addEdge(0,3);
 	assert(countSubgraphs(K13, peter) == 10); 
 }
- 
+
+void testCountSubgraphs2() {
+	//assert(countSubgraphs(p3, g) == 12);
+}
+
+void runAllTests() {
+	testCountSubgraphs2(); 
+	testCountSubgraphs(); 
+	testOldNameContract();
+    testContractionDSU;
+    testIsomorph(); 
+    testContraction(); 
+    testGenerateSpasm();
+	test_tree(); 
+}
 
 int main() {
 	ios::sync_with_stdio(false); 
 	cin.tie(0);  
 
-	testCountSubgraphs();
-	runAllTests();
-	//Graph G(1);  
-	//test_tree();
+	Graph g(10); 
+	g.addEdge(1, 0);
+	g.addEdge(2, 0);
+	g.addEdge(3, 2);
+	g.addEdge(4, 3);
+	g.addEdge(5, 4);
+	g.addEdge(6, 0);
+	g.addEdge(7, 5);
+	g.addEdge(8, 1);
+	g.addEdge(9, 5);
+	Graph p = getPk(3); 
+	std::cout << countSubgraphs(p, g) << "\n";
+	
+	//testCountSubgraphs2();
+	// runAllTests();
 	return 0;
 }

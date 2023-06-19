@@ -1,21 +1,26 @@
 CC := g++
 CFLAGS := -std=c++17 -O3
-INCLUDES := -I./homlib/src -I/home/dimitri/.local/include 
+INCLUDES := -I./homlib/src -I/home/dimitri/.local/include -I./nauty2_8_6
 SRCDIR := ./homlib/src
 OBJDIR := ./homlib/obj
+LIBDIR := ./nauty2_8_6
+LIBS := $(LIBDIR)/nauty.a
 
 SOURCES := $(wildcard $(SRCDIR)/*.cc)
 OBJECTS := $(patsubst $(SRCDIR)/%.cc, $(OBJDIR)/%.o, $(SOURCES))
 
-.PHONY: all clean
+.PHONY: all clean nauty
 
-all: myprogram
+all: nauty myprogram
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc | $(OBJDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
+
+nauty:
+	$(MAKE) -C $(LIBDIR)
 
 myprogram: $(OBJDIR)/homlib.o $(OBJDIR)/main.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
@@ -25,3 +30,4 @@ $(OBJDIR)/main.o: main.cpp
 
 clean:
 	rm -rf $(OBJDIR) myprogram
+	$(MAKE) -C $(LIBDIR) clean
