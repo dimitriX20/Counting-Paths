@@ -1,6 +1,11 @@
 #pragma once
 
-#include <bits/stdc++.h>
+#include <algorithm> // Für sort(), lower_bound(), set_intersection()
+#include <numeric> // Für accumulate()
+#include <unordered_map> // Für unordered_map()
+#include <vector> // Für vector()
+#include <set> // Für set_intersection()
+#include <iterator> // Für back_inserter()
 #include "graph.hh"
 #include "treedec.hh"
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#include<set>  
+#include <iostream>
+#include <set>  
 #include <unordered_set>
 #include <cmath>
 #include <map>
@@ -108,7 +109,7 @@ struct Graph {
 		return k == m_value*(size_t)n_value;
 	}
 
-	int64_t countAutomorphisms() {
+	int64_t countAutomorphisms() const {
 		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
 			int n_value = g.n;
 			g1_sz = 0; // Initialize the size of g1 to be 0
@@ -294,6 +295,7 @@ void generateSpHelper(Graph& g) {
 }
 
 void generateSpasm(Graph &g) {   
+		mp.clear();
 		g.spasms.emplace_back(1, g);
 		generateSpHelper(g);
 		for (auto &pair: mp) 
