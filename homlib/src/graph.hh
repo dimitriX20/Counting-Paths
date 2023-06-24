@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <numeric>   
 #include "dsu.cpp"
+#include <omp.h>
 
 extern "C" {
 	#include "nauty.h"
@@ -274,25 +275,56 @@ Graph contract(const Graph& h, int v, int u){
 
 std::vector<std::pair<int, Graph>> mp; // global map to store all graphs and multiplicators 
 void generateSpHelper(Graph& g) {
-		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
-		for (auto &pair : pairs) {
-				Graph newGraph = contract(g, pair.first, pair.second);
+	std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
+	
+	#pragma omp parallel for ordered schedule(static)
+	for (int i = 0; i < pairs.size(); i++) {
+		auto &pair = pairs[i];
+		Graph newGraph = contract(g, pair.first, pair.second);
 
-				bool isomorphicExists = false;
-				for (auto &pairInMap : mp) {
-						if (newGraph == pairInMap.second) {
-								isomorphicExists = true;  
-								pairInMap.first += 1;
-								break; 
-						}
+		bool isomorphicExists = false;
+		
+		#pragma omp critical
+		{
+			for (auto &pairInMap : mp) {
+				if (newGraph == pairInMap.second) {
+					isomorphicExists = true;  
+					pairInMap.first += 1;
+					break; 
 				}
-
-				if (!isomorphicExists) { 
-						mp.push_back({1, newGraph});
-						generateSpHelper(newGraph);
-				}
+			}
 		}
+
+		if (!isomorphicExists) { 
+			#pragma omp critical
+			{
+				mp.push_back({1, newGraph});
+			}
+			generateSpHelper(newGraph);
+		}
+	}
 }
+
+// void generateSpHelper(Graph& g) {
+// 		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
+// 		for (auto &pair : pairs) {
+// 				Graph newGraph = contract(g, pair.first, pair.second);
+
+// 				bool isomorphicExists = false;
+// 				for (auto &pairInMap : mp) {
+// 						if (newGraph == pairInMap.second) {
+// 								isomorphicExists = true;  
+// 								pairInMap.first += 1;
+// 								break; 
+// 						}
+// 				}
+
+// 				if (!isomorphicExists) { 
+// 						mp.push_back({1, newGraph});
+// 						generateSpHelper(newGraph);
+// 				}
+// 		}
+// }
 
 void generateSpasm(Graph &g) {   
 		mp.clear();
