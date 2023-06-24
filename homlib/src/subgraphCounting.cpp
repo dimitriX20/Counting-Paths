@@ -1,5 +1,4 @@
 #include "hom.hh" // achte auf doppeltes include, wenn spasm wieder auskommentiert 
-#include "testGraph.cpp"
 #include <vector>
 #include <iostream>
 #include <future> // Für std::async und std::future
@@ -38,19 +37,50 @@ struct SubgraphCounting {
         std::vector<std::pair<int, Graph>> spasm = H.spasms; 
         Value subgraphs = 0; 
 
+        bool parallelisieren = H.spasms.size() >= 50; 
+        if (not parallelisieren) {
+            for (auto& h: spasm) {
+                HomomorphismCounting<Value> homCounter(h.second, G);
+                Value coeff = h.first * 1LL * getBlockFactors(h.second); 
+                coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); 
+                subgraphs += coeff * homCounter.run(); 
+            }
+
+            Value automorphisms = 0; 
+            std::vector<Graph> connectedComponentsH = connectedComponents(H); 
+
+            for (auto& h: connectedComponentsH)
+                automorphisms += h.countAutomorphisms();
+
+            return subgraphs / automorphisms; 
+        } 
+
+        std::vector<std::future<Value>> futures1;
         for (auto& h: spasm) {
-            HomomorphismCounting<Value> homCounter(h.second, G);
-            Value coeff = h.first * 1LL * getBlockFactors(h.second); 
-            coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); 
-            subgraphs += coeff * homCounter.run(); 
+            futures1.emplace_back(std::async(std::launch::async, [&] {
+                HomomorphismCounting<Value> homCounter(h.second, G);
+                Value coeff = h.first * 1LL * getBlockFactors(h.second); 
+                coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL);
+                return coeff * homCounter.run();
+            }));
         }
+
+        for (auto &future : futures1) 
+            subgraphs += future.get();
 
         Value automorphisms = 0; 
         std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 
-        for (auto& h: connectedComponentsH)
-            automorphisms += h.countAutomorphisms();
+        std::vector<std::future<Value>> futures2;
+        for (auto& h: connectedComponentsH) {
+            futures2.emplace_back(std::async(std::launch::async, [&] {
+                return h.countAutomorphisms();
+            }));
+        }
 
+        for (auto &future : futures2) 
+            automorphisms += future.get();
+        
         return subgraphs / automorphisms; 
     }
 };
