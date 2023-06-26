@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS := -std=c++17 -O3 -pthread
+CFLAGS := -std=c++17 -O3 -pthread -fsanitize=address
 INCLUDES := -I./homlib/src -I/home/dimitri/.local/include -I./nauty2_8_6
 SRCDIR := ./homlib/src
 OBJDIR := ./homlib/obj
@@ -11,7 +11,7 @@ OBJECTS := $(patsubst $(SRCDIR)/%.cc, $(OBJDIR)/%.o, $(SOURCES))
 
 .PHONY: all clean nauty
 
-all: nauty myprogram
+all: nauty myprogram run_script
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc | $(OBJDIR)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
@@ -28,6 +28,12 @@ myprogram: $(OBJDIR)/homlib.o $(OBJDIR)/main.o
 $(OBJDIR)/main.o: main.cpp
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
+run_script:
+	echo "#!/bin/bash" > run_myprogram.sh
+	echo "ulimit -s unlimited" >> run_myprogram.sh
+	echo "./myprogram" >> run_myprogram.sh
+	chmod +x run_myprogram.sh
+
 clean:
-	rm -rf $(OBJDIR) myprogram
+	rm -rf $(OBJDIR) myprogram run_myprogram.sh
 	$(MAKE) -C $(LIBDIR) clean

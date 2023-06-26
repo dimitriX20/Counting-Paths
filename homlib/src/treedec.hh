@@ -63,20 +63,20 @@ struct NiceTreeDecomposition {
   }
 };
 
+std::vector<int> set_difference(const std::vector<int>& A, const std::vector<int>& B) {
+  std::vector<int> C;
+  std::set_difference(A.begin(), A.end(), B.begin(), B.end(), std::back_inserter(C));
+  return C;
+}
+
+std::vector<int> set_union(const std::vector<int>& A, const std::vector<int>& B) {
+  std::vector<int> C;
+  std::set_union(A.begin(), A.end(), B.begin(), B.end(), std::back_inserter(C));
+  return C;
+  }
+
 // Greedy Elimination Ordering
 NiceTreeDecomposition niceTreeDecomposition(Graph G) {
-  // utility functions
-  auto set_difference = [&](std::vector<int> A, std::vector<int> B) {
-    std::vector<int> C;
-    std::set_difference(A.begin(), A.end(), B.begin(), B.end(), std::back_inserter(C));
-    return C;
-  };
-  auto set_union = [&](std::vector<int> A, std::vector<int> B) {
-    std::vector<int> C;
-    std::set_union(A.begin(), A.end(), B.begin(), B.end(), std::back_inserter(C));
-    return C;
-  };
-
   // implementation
   int n = G.n;
   std::vector<std::vector<int>> nbh = G.adj;
@@ -117,6 +117,7 @@ NiceTreeDecomposition niceTreeDecomposition(Graph G) {
       if (nbh[v].size() < U.size()) que.push(std::make_pair(nbh[v].size(), v));
     }
   }
+
   /*
   for (int i = 0; i < X.size(); ++i) {
     std::cout << i << ": " << X[i] << std::endl;

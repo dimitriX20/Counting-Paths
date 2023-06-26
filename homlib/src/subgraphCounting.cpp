@@ -37,7 +37,7 @@ struct SubgraphCounting {
         std::vector<std::pair<int, Graph>> spasm = H.spasms; 
         Value subgraphs = 0; 
 
-        bool parallelisieren = H.spasms.size() >= 50; 
+        bool parallelisieren = false; //H.spasms.size() >= 50; 
         if (not parallelisieren) {
             for (auto& h: spasm) {
                 HomomorphismCounting<Value> homCounter(h.second, G);
@@ -84,3 +84,7 @@ struct SubgraphCounting {
         return subgraphs / automorphisms; 
     }
 };
+
+// template<class Value> countSubgraphsOnePair {
+
+// }; 
