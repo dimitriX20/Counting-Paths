@@ -14,10 +14,7 @@
 extern "C" {
 	#include "nauty.h"
 	#include "naututil.h"
-}
-//#include <mutex>
-
-//std::mutex graphMutex;
+} 
 
 struct Graph {
 	int n, m;
@@ -293,14 +290,14 @@ std::vector<std::pair<int, Graph>> mp; // global map to store all graphs and mul
 void generateSpHelper(Graph& g) {
 	std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
 	
-	//#pragma omp parallel for ordered schedule(static)
+	#pragma omp parallel for ordered schedule(static)
 	for (int i = 0; i < pairs.size(); i++) {
 		auto &pair = pairs[i];
 		Graph newGraph = contract(g, pair.first, pair.second);
 
 		bool isomorphicExists = false;
 		
-		//#pragma omp critical
+		#pragma omp critical
 		{
 			for (auto &pairInMap : mp) {
 				if (newGraph == pairInMap.second) {
@@ -312,7 +309,7 @@ void generateSpHelper(Graph& g) {
 		}
 
 		if (!isomorphicExists) { 
-			//#pragma omp critical
+			#pragma omp critical
 			{
 				mp.push_back({1, newGraph});
 			}
