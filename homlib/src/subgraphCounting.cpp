@@ -37,7 +37,7 @@ struct SubgraphCounting {
         std::vector<std::pair<int, Graph>> spasm = H.spasms; 
         Value subgraphs = 0; 
 
-        bool parallelisieren = H.spasms.size() >= 50; 
+        bool parallelisieren = H.spasms.size() >= 15; 
         if (not parallelisieren) {
             for (auto& h: spasm) {
                 HomomorphismCounting<Value> homCounter(h.second, G);
@@ -116,7 +116,7 @@ struct countPathsOnePair {
         }
     }
 
-    int countSTPaths(int k) {
+    int64_t countSTPaths(int k) {
         std::vector<bool> visited(g.n, false);
         dfs(s, visited);
 
@@ -126,12 +126,24 @@ struct countPathsOnePair {
         bfs(s, dist_s);
         bfs(t, dist_t);
 
-        std::vector<int> remove;
+        std::vector<bool> remove(g.n);
+        int sz = g.n; 
+
         for (int v = 0; v < g.n; ++v) {
-            if (not visited[v] or dist_s[v] + dist_t[v] > k) 
-                remove.push_back(v);
+            if (not visited[v] or dist_s[v] + dist_t[v] > k) {
+                remove[v] = true;
+                sz -= 1;
+            }
         }
 
-            
+        if (sz > 22) 
+            return 0;   
+
+        int64_t ans = 0; 
+        for (int N = 3; N <= sz; N += 1) {
+            std::vector<vector<int64_t>> dp(1 << N, std::vector<int64_t> (N, 0LL));
+        }
+
+        return ans; 
     }
 }; 
