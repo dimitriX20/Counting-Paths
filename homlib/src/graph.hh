@@ -1,12 +1,14 @@
 #pragma once
 
-#include<set>  
+#include <iostream>
+#include <set>  
 #include <unordered_set>
 #include <cmath>
 #include <map>
 #include <algorithm>
 #include <numeric>   
 #include "dsu.cpp"
+#include <omp.h>
 
 extern "C" {
 	#include "nauty.h"
@@ -108,7 +110,7 @@ struct Graph {
 		return k == m_value*(size_t)n_value;
 	}
 
-	int64_t countAutomorphisms() {
+	int64_t countAutomorphisms() const {
 		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
 			int n_value = g.n;
 			g1_sz = 0; // Initialize the size of g1 to be 0
@@ -273,27 +275,59 @@ Graph contract(const Graph& h, int v, int u){
 
 std::vector<std::pair<int, Graph>> mp; // global map to store all graphs and multiplicators 
 void generateSpHelper(Graph& g) {
-		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
-		for (auto &pair : pairs) {
-				Graph newGraph = contract(g, pair.first, pair.second);
+	std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
+	
+	#pragma omp parallel for ordered schedule(static)
+	for (int i = 0; i < pairs.size(); i++) {
+		auto &pair = pairs[i];
+		Graph newGraph = contract(g, pair.first, pair.second);
 
-				bool isomorphicExists = false;
-				for (auto &pairInMap : mp) {
-						if (newGraph == pairInMap.second) {
-								isomorphicExists = true;  
-								pairInMap.first += 1;
-								break; 
-						}
+		bool isomorphicExists = false;
+		
+		#pragma omp critical
+		{
+			for (auto &pairInMap : mp) {
+				if (newGraph == pairInMap.second) {
+					isomorphicExists = true;  
+					pairInMap.first += 1;
+					break; 
 				}
-
-				if (!isomorphicExists) { 
-						mp.push_back({1, newGraph});
-						generateSpHelper(newGraph);
-				}
+			}
 		}
+
+		if (!isomorphicExists) { 
+			#pragma omp critical
+			{
+				mp.push_back({1, newGraph});
+			}
+			generateSpHelper(newGraph);
+		}
+	}
 }
 
+// void generateSpHelper(Graph& g) {
+// 		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
+// 		for (auto &pair : pairs) {
+// 				Graph newGraph = contract(g, pair.first, pair.second);
+
+// 				bool isomorphicExists = false;
+// 				for (auto &pairInMap : mp) {
+// 						if (newGraph == pairInMap.second) {
+// 								isomorphicExists = true;  
+// 								pairInMap.first += 1;
+// 								break; 
+// 						}
+// 				}
+
+// 				if (!isomorphicExists) { 
+// 						mp.push_back({1, newGraph});
+// 						generateSpHelper(newGraph);
+// 				}
+// 		}
+// }
+
 void generateSpasm(Graph &g) {   
+		mp.clear();
 		g.spasms.emplace_back(1, g);
 		generateSpHelper(g);
 		for (auto &pair: mp) 

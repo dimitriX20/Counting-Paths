@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS := -std=c++17 -O3
+CFLAGS := -std=c++17 -O3 -pthread
 INCLUDES := -I./homlib/src -I/home/dimitri/.local/include -I./nauty2_8_6
 SRCDIR := ./homlib/src
 OBJDIR := ./homlib/obj
