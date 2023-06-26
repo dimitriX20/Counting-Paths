@@ -139,6 +139,18 @@ struct countPathsOnePair {
         if (sz > 22) 
             return 0;   
 
+        // müssen zunächst den Graphen neu erstellen und umbennen s und t sind zB. 0 und 1 
+        // führe dies analog zu contract() durch!
+        Graph nw(sz); 
+
+        if (isTree(nw)) {
+            // Tree dp 
+            // oder Centroid Decomposition durchführen
+        }
+
+        // ans = summe über alle: dp[mask][1] mit pop_count(mask) <= k + 1
+        // initialisiere nur dp[1][1] = 1 (also Startecke 0 ist 1 in der mask)
+
         int64_t ans = 0; 
         for (int N = 3; N <= sz; N += 1) {
             std::vector<vector<int64_t>> dp(1 << N, std::vector<int64_t> (N, 0LL));
