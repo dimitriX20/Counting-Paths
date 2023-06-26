@@ -9,6 +9,7 @@
 #include <numeric>   
 #include "dsu.cpp"
 #include <omp.h>
+#include <queue>
 
 extern "C" {
 	#include "nauty.h"
@@ -274,6 +275,7 @@ Graph contract(const Graph& h, int v, int u){
 
 
 std::vector<std::pair<int, Graph>> mp; // global map to store all graphs and multiplicators 
+
 void generateSpHelper(Graph& g) {
 	std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
 	
@@ -333,6 +335,60 @@ void generateSpasm(Graph &g) {
 		for (auto &pair: mp) 
 				g.spasms.emplace_back(pair);
 }
+
+// void generateSpasm(Graph& g) {// iterative version
+// 	mp.clear(); 
+// 	std::queue<Graph> q; 
+
+// 	q.emplace(g);
+// 	mp.emplace_back(1, g);
+
+// 	#pragma omp parallel
+// 	{
+// 		while (true) {
+// 			Graph h(1);
+
+// 			#pragma omp critical(queue_access)
+// 			{
+// 				if (q.empty()) break;
+
+// 				h = q.front(); 
+// 				q.pop();
+// 			}
+
+// 			std::vector<std::pair<int, int>> kontraktionen = h.getNonNeighbors();	
+// 			for (auto k: kontraktionen) {
+// 				Graph newGraph = contract(h, k.first, k.second);
+// 				bool isomorphicExists = false;
+
+// 				#pragma omp critical(map_access)
+// 				{
+// 					for (auto &pairInMap : mp) {
+// 						if (newGraph == pairInMap.second) {
+// 							isomorphicExists = true;  
+// 							pairInMap.first += 1;
+// 							break; 
+// 						}
+// 					}
+// 				}
+
+// 				if (not isomorphicExists) {
+// 					#pragma omp critical(map_access)
+// 					{
+// 						mp.push_back({1, newGraph});
+// 					}
+
+// 					#pragma omp critical(queue_access)
+// 					{
+// 						q.emplace(newGraph);
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	g.spasms = mp;
+// }
+
 
 bool isTree(Graph G) {
 	std::vector<int> parent(G.n, -1);
