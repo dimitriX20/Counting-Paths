@@ -24,13 +24,16 @@ struct Graph {
 	std::vector<std::vector<int>> adj;
 	std::vector<std::set<int>> s; 
 	std::vector<int> oldName; 
+	std::vector<int> nwName; 
 	std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> spasms;
 
-	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n), oldName(n) {
+	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n), oldName(n), nwName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
+		std::iota(nwName.begin(), nwName.end(), 0); 
 	}
 
 	void addEdge(int u, int v) {
+		//u = nwName[u], v = nwName[v]; // might need to delete 
 		if (u < 0 or v < 0 or u >= n or v >= n or v == u) 
 			return; 
 		
@@ -44,25 +47,37 @@ struct Graph {
 		m += 1; 
 	}
 
-	void addNode() {
+	void addNextNodeAndEdge() {
 		n += 1; 
-		dsu.resize(n);
-		oldName.resize(n); 
-		oldName[n - 1] = n - 1;
+		m += 1;
+		dsu.resize();
+		
+		int N = oldName.size() + 1;
+		oldName.resize(N); 
+		nwName.resize(N); 
+		
+		oldName[n - 1] = N - 1;
+		nwName[N - 1] = n - 1; // mxPrevN should be now a new node named n - 1 
+		
 		s.resize(n); 
+		s[n - 1].insert(nwName[n - 2]); // evtl. dsu.get[nwName[n - 2]]
+		s[nwName[n - 2]].insert(n - 1); 
+
 		adj.resize(n); 
+		adj[n - 1].push_back(nwName[n - 2]);
+		adj[nwName[n - 2]].push_back(n - 1);
 	}
 
-	  std::vector<std::pair<int, int>> getNonNeighbors() {
-		std::vector<std::pair<int, int>> ans; 
-		for (int i = 0; i < n; i += 1) {
-			for (int j = i + 1; j < n; j += 1) {
-				if (s[i].find(j) == s[i].end()) 
-					ans.emplace_back(i, j); 
-			}
-		}
-		return ans; 
-	}
+	//   std::vector<std::pair<int, int>> getNonNeighbors() {
+	// 	std::vector<std::pair<int, int>> ans; 
+	// 	for (int i = 0; i < n; i += 1) {
+	// 		for (int j = i + 1; j < n; j += 1) {
+	// 			if (s[i].find(j) == s[i].end()) 
+	// 				ans.emplace_back(i, j); 
+	// 		}
+	// 	}
+	// 	return ans; 
+	// }
 
 
 	bool isIsomorphic(const Graph& h) {
@@ -137,50 +152,50 @@ struct Graph {
 		return result;
 	}
 
-	int64_t countAutomorphisms() const {
-		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
-			int n_value = g.n;
-			g1_sz = 0; // Initialize the size of g1 to be 0
-			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
-			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
-			EMPTYGRAPH(g1, m_value, n_value);
+// 	int64_t countAutomorphisms() const {
+// 		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
+// 			int n_value = g.n;
+// 			g1_sz = 0; // Initialize the size of g1 to be 0
+// 			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
+// 			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
+// 			EMPTYGRAPH(g1, m_value, n_value);
 			
-			for (int i = 0; i < n_value; ++i) {
-				for (int j : g.adj[i]) {
-					ADDONEEDGE(g1, i, j, m_value);
-				}
-			}
-		}; 
+// 			for (int i = 0; i < n_value; ++i) {
+// 				for (int j : g.adj[i]) {
+// 					ADDONEEDGE(g1, i, j, m_value);
+// 				}
+// 			}
+// 		}; 
 
-		DYNALLSTAT(int, lab, lab_sz);
-		DYNALLSTAT(int, ptn, ptn_sz);
-		DYNALLSTAT(int, orbits, orbits_sz);
-		DYNALLSTAT(graph, g, g_sz);
-		static DEFAULTOPTIONS_GRAPH(options);
-		statsblk stats;
+// 		DYNALLSTAT(int, lab, lab_sz);
+// 		DYNALLSTAT(int, ptn, ptn_sz);
+// 		DYNALLSTAT(int, orbits, orbits_sz);
+// 		DYNALLSTAT(graph, g, g_sz);
+// 		static DEFAULTOPTIONS_GRAPH(options);
+// 		statsblk stats;
 
-		int m, n;
-		n = this->n;
-		m = SETWORDSNEEDED(n);
-		nauty_check(WORDSIZE, m, n, NAUTYVERSIONID);
+// 		int m, n;
+// 		n = this->n;
+// 		m = SETWORDSNEEDED(n);
+// 		nauty_check(WORDSIZE, m, n, NAUTYVERSIONID);
 
-		DYNALLOC1(int, lab, lab_sz, n, "malloc");
-		DYNALLOC1(int, ptn, ptn_sz, n, "malloc");
-		DYNALLOC1(int, orbits, orbits_sz, n, "malloc");
+// 		DYNALLOC1(int, lab, lab_sz, n, "malloc");
+// 		DYNALLOC1(int, ptn, ptn_sz, n, "malloc");
+// 		DYNALLOC1(int, orbits, orbits_sz, n, "malloc");
 
-		graph *gp = NULL;
-		size_t gp_sz = 0;
-		convertToNautyGraph(*this, gp, gp_sz, m);
+// 		graph *gp = NULL;
+// 		size_t gp_sz = 0;
+// 		convertToNautyGraph(*this, gp, gp_sz, m);
 
-		DYNALLOC2(graph, g, g_sz, n, m, "malloc");
+// 		DYNALLOC2(graph, g, g_sz, n, m, "malloc");
 
-		options.getcanon = TRUE;
+// 		options.getcanon = TRUE;
 
-		densenauty(gp, lab, ptn, orbits, &options, &stats, m, n, g);
+// 		densenauty(gp, lab, ptn, orbits, &options, &stats, m, n, g);
 
-		// Returning automorphism group size as a 64 bit integer
-		return stats.grpsize1;
-  }
+// 		// Returning automorphism group size as a 64 bit integer
+// 		return stats.grpsize1;
+//   }
 
 	// Copy constructor
 	Graph(const Graph& other) {
@@ -191,6 +206,7 @@ struct Graph {
 			s = other.s;
 			dsu = other.dsu;
 			oldName = other.oldName; 
+			nwName = other.nwName; 
 	}
 
 	// Assignment operator
@@ -203,6 +219,7 @@ struct Graph {
 					s = other.s;
 					dsu = DSU(other.n);
 					oldName = other.oldName;
+					nwName = other.nwName; 
 			}
 			return *this;
 	}
@@ -287,8 +304,8 @@ void print(const Graph& g) {
 	}
 }
 
-Graph contract(const Graph& h, int v, int u){
-	if (v >= h.n or u >= h.n or u < 0 or v < 0) 
+Graph contract(const Graph& h, int v, int u) {  
+	if (v >= h.n or u >= h.n or u < 0 or v < 0) // we assume that v and u are the new names 
 		return Graph(0); 
 
 	if (v == u) 
@@ -298,17 +315,24 @@ Graph contract(const Graph& h, int v, int u){
 	std::set<int> allNeighbors; 
 	res.dsu = h.dsu; 
 
+	int idx = 0; 
 	res.oldName = h.oldName; 
+	std::vector<int> updOldName = res.oldName; 
+	updOldName[idx] = res.oldName[v]; 
+
 	int p1 = res.dsu.get(res.oldName[v]); 
 	int p2 = res.dsu.get(res.oldName[u]); 
 //assert(not p1 == p2); 
 	res.dsu.unite(p1, p2);
 	
-	int idx = 0; 
-	std::map<int, int> nwName; 
+	std::map<int, int> nwName;
+
+	res.nwName = h.nwName; 
+	std::vector<int> upNwName = res.nwName; 
+	upNwName[res.oldName[v]] = upNwName[res.oldName[u]] = idx; 
+
+	//std::vector<int> nwName(h.dsu.e.size()); // evtl. mxOldName einführen 
 	nwName[v] = nwName[u] = idx; 
-	std::vector<int> updOldName = res.oldName; 
-	updOldName[idx] = res.oldName[v]; 
 
 	for (int i = 0; i < h.n; i += 1) {
 		if (i == v or i == u) 
@@ -317,9 +341,11 @@ Graph contract(const Graph& h, int v, int u){
 		idx += 1; 
 		nwName[i] = idx; 
 		updOldName[idx] = res.oldName[i]; 
+		upNwName[res.oldName[i]] = idx; 
 	}
 
 	res.oldName = updOldName; 
+	res.nwName = upNwName; 
 
 	for (int i: h.adj[v]) {
 		if (i != v and i != u)

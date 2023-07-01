@@ -4,8 +4,7 @@
 #include <future> // Für std::async und std::future
 
 int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
-
-std::cerr << " starting method countSubgraphs  \n";
+    std::cerr << " starting method countSubgraphs  \n";
 	N = std::min(N, size_t(g.n));
 
 	if (N == 1) 
@@ -29,47 +28,57 @@ std::cerr << " starting method countSubgraphs  \n";
 		}
 		return ans; 
 	}; 
-	
-	size_t k = 2; 
-    Graph p2 = getPk(2);
-	g.spasms.push_back({{1LL, int64_t(2 * g.m)}, p2}); // hom(p_2, g) == 2 * nrEdgesOfG
+ 
+	size_t k = 2;  
+	g.spasms.push_back({{1LL, int64_t(2 * g.m)}, getPk(2)}); // hom(p_2, g) == 2 * nrEdgesOfG
 	int64_t subgraphs = (N == 1 ? 0 : g.m); 
 	std::cerr << " now we get while (k < N): \n";
+    
 	while (k < N) { // efficiently transform k to k + 1 
 		k += 1; 
-// ENSURE that we update coeff correctly: for example k = 2 
+         
 		if (g.n < k or g.m < k - 1) // test if P_k+1 has more nodes or edges than g 
 			break; 
 
         std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> nwSpasm; 
 
-	std::cerr << " now start with iterating over g.spasms \n";
+	    std::cerr << " now start with iterating over g.spasms \n";
 		for (auto& [p, h]: g.spasms) {
 			Graph nw = h; // copy old spasm graph
-			auto partClassNeighbor = nw.dsu.get(k - 2); 
-std::cerr << " n von nw vor nw.addNode() : " << nw.n << "\n";
-			nw.addNode(); 
-std::cerr << " n von nw NACH nw.addNode() : " << nw.n << "\n";
-			nw.addEdge(nw.n - 1, partClassNeighbor); // add edge for new node (as we are in P_{k + 1} now)
-        //HIER FEHLER wollen k - 1 hinzufügen als Knoten Name, aber umbennung sorgt dafür dass k - 1 >= nw.n
-			std::cerr << " got partClNeighbor, nwNode and nwEdge \n";
+            std::cerr << " nw.dsu.get(" << k - 2 << ") : " << nw.dsu.get(k - 2) << "\n";
+            std::cerr << " größe von nwName: " << nw.nwName.size() << "\n";
+			
+            auto partClassNeighbor = nw.nwName[k - 2]; // oder evlt. nwName[nw.dsu.get(k - 2)]
+            std::cerr << " partClassNeighbor: " << partClassNeighbor << "\n";
+            
+            nw.addNextNodeAndEdge();
+            std::cerr << " added next node and edge" << "\n"; 
             std::cerr << " so sieht nw nun aus nach neuer Kante und Ecke: \n";
             print(nw); 
+ 
+ 
+
 			HomomorphismCounting<int64_t> oldHom(nw, g); 
 			int64_t dg1HeuristicHom = oldHom.run(); // precompute to apply change if nwNode has dg == 1 
-std::cerr << " computed heuristicForHom \n";
-			for (int contractNode = 0; contractNode < nw.n; contractNode += 1) {
+            std::cerr << " computed heuristicForHom \n";
+
+			for (int contractNode = 0; contractNode < k - 1; contractNode += 1) {
 				bool done = false; 
-				auto toContract = nw.dsu.get(contractNode); 
-            std::cerr << " wenn hier 1 rauskommt: " << (toContract != partClassNeighbor) << " , dann kontrahiere: " << toContract << " und " << partClassNeighbor << "\n";
-				if (toContract == partClassNeighbor) // gleiche Klasse wie Nachbar, daher keine Kontraktion erlaubt  
+				auto toContract = nw.nwName[contractNode];//nw.nwName[nw.dsu.get(contractNode)]; // betrachte aktuellen Namen der repräsentativen Ecke der DSU klasse 
+
+                std::cerr << " wenn hier 1 rauskommt: " << (toContract != partClassNeighbor) << " , dann kontrahiere: " << toContract << " und " << partClassNeighbor << "\n";
+                // kontrahieren aktuell was falsches
+                //if (toContract == partClassNeighbor or nw.s[toContract].find(partClassNeighbor) != nw.s[toContract].end())
+				if (toContract != partClassNeighbor) // or nw.s[toContract].find(partClassNeighbor) != nw.s.end()) // gleiche Klasse wie Nachbar, daher keine Kontraktion erlaubt  
 					continue; 
-				
-				Graph res = contract(nw, k - 1, toContract); // HIER FEHLER wollen k - 1 hinzufügen als Knoten Name, aber umbennung sorgt dafür dass k - 1 >= nw.n
+
+				Graph res = contract(nw, nw.nwName[k - 1], toContract); // toContract ist bereits neuer Name 
 				bool same = false; 
-std::cerr << " contracted:" << toContract << " and " << k - 1 << " now searching for isomorphisms \n";
-            std::cerr << " so sieht res nun aus nach Kontraktion von nw: \n";
-            print(res); 
+
+                std::cerr << " contracted:" << toContract << " and " << nw.nwName[k - 1] << " now searching for isomorphisms \n";
+                std::cerr << " so sieht res nun aus nach Kontraktion von nw: \n";
+                print(res); 
+
 				for (auto& [p2, h2]: nwSpasm) { // search for isomorphism and strong isomorphism
 					if (h2 == res)							
 						same = true; 
@@ -77,7 +86,9 @@ std::cerr << " contracted:" << toContract << " and " << k - 1 << " now searching
 					if (not same) 
 						continue; 
 
+                    // hier aufpassen aufgrund von nwName und olName!!!
 					if (strongIsomorph(h2, res)) { // now as we are isomorph, therefore test for strong isomorphism 
+                        std::cerr << " we are strongly isomorphic! \n";
 						done = true; 
 						break; 
 					}
@@ -87,33 +98,35 @@ std::cerr << " contracted:" << toContract << " and " << k - 1 << " now searching
 						break; 
 					}
 				}
-std::cerr << " passed isomorphism checking \n";
-				if (done) 
+                
+                std::cerr << " passed isomorphism checking \n";
+				
+                if (done) 
 					continue; 
 
 				if (not same) { // found unique spasm graph. therefore, compute hom number or use precomputed value
-    //if (res.adj[res.dsu.get(k - 1)].size() == 1) 
-//		nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), dg1HeuristicHom * int64_t(g.n - 1)}, res}); 
-    //else {
+                    //if (res.adj[res.dsu.get(k - 1)].size() == 1) 
+                //		nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), dg1HeuristicHom * int64_t(g.n - 1)}, res}); 
+                    //else {
 
-std::cerr << " countingHom res, g \n";  
-std::cerr << " printing res graph: "; 
-print(res); 
-						HomomorphismCounting<int64_t> hom(res, g); 
+                    std::cerr << " countingHom res, g \n";  
+                    std::cerr << " printing res graph: "; 
+                    print(res); 
+                    HomomorphismCounting<int64_t> hom(res, g); 
 
-std::cerr << " blockfactors(res): " << getBlockFactors(res) << "\n";
+                    std::cerr << " blockfactors(res): " << getBlockFactors(res) << "\n";
 
-std::cerr << " running hom.run(): " << hom.run() << "\n";
-						nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), hom.run()}, res});
-					}
+                    std::cerr << " running hom.run(): " << hom.run() << "\n";
+                    nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), hom.run()}, res});
+                }
 //}
 			}
 		}
 
-std::cerr << " passed an iteration round of getting from k to k + 1 \n";
+        //std::cerr << " passed an iteration round of getting from k to k + 1 \n";
         std::swap(nwSpasm, g.spasms); // swappe erst hier, da nun nwSpasm aktuell 
 
-std::cerr << " Größe von nwSpasm: " << g.spasms.size()  << "\n";
+        std::cerr << " Größe von nwSpasm: " << g.spasms.size()  << "\n";
 		// hier nun mit neuem g.spasms die Subgraphen zählen 
         int64_t sub = 0; 
         for (auto [p, gr]: g.spasms) {

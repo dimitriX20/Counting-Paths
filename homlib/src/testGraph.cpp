@@ -156,6 +156,9 @@ void testContractionDSU() {
     assert(okSecondBlock); 
 }
 
+void testContractionDSU2() {
+    // TODO add test for nwName vector 
+}
 
 // void testGenerateSpasm() {// nicht mehr relevanter test nach Umbau 
 //     Graph p5 = getPk(5);

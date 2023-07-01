@@ -21,10 +21,8 @@ struct DSU {
 		return true;
 	}
 
-	void resize(int N) {
-		if (e.size() >= N) 
-			return;
-			
+	void resize() {
+		int N = e.size() + 1; 
 		e.resize(N); 
 		e[N - 1] = -1; 
 	}
