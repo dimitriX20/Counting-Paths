@@ -38,14 +38,16 @@ struct SubgraphCounting {
         Value subgraphs = 0; 
 
         bool parallelisieren = H.spasms.size() >= 15; 
+        long long summe = 0; 
         if (not parallelisieren) {
             for (auto& h: spasm) {
                 HomomorphismCounting<Value> homCounter(h.second, G);
                 Value coeff = h.first * 1LL * getBlockFactors(h.second); 
                 coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); 
                 subgraphs += coeff * homCounter.run(); 
+                summe += h.first;
             }
-
+            //std::cerr << " summe für k = 10: " << summe << "\n";
             Value automorphisms = 0; 
             std::vector<Graph> connectedComponentsH = connectedComponents(H); 
 

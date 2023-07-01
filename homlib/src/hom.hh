@@ -1,6 +1,4 @@
 #pragma once
-
-#include <bits/stdc++.h>
 #include "graph.hh"
 #include "treedec.hh"
 

@@ -1,5 +1,3 @@
-#include <bits/stdc++.h>
-using namespace std;   
 #include <cassert>
 #include "graph.hh"
 
@@ -20,8 +18,8 @@ void test_tree() {
 	}
 	HomomorphismCounting<int> hom(T, G);
 	HomomorphismCountingTree<int> homTree(T, G);
-	cout << hom.run() << "\n";
-	cout << homTree.run() << "\n";
+	std::cout << hom.run() << "\n";
+	std::cout << homTree.run() << "\n";
 	assert(hom.run() == homTree.run());
 }
 
@@ -160,7 +158,7 @@ void testGenerateSpasm() {
     generateSpasm(p5); 
     auto spasm = p5.spasms;
 
-    vector<Graph> need = {p5, getPk(4), getPk(3), getPk(2), contract(p5, 0, 4),
+    std::vector<Graph> need = {p5, getPk(4), getPk(3), getPk(2), contract(p5, 0, 4),
                          contract(p5, 0, 3), contract(getPk(4), 0, 3), contract(getPk(5), 1, 3)};
 
     bool isFine = true;  
