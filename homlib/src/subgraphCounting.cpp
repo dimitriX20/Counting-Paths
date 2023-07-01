@@ -50,23 +50,24 @@ std::cerr << " starting method countSubgraphs  \n";
 std::cerr << " n von nw vor nw.addNode() : " << nw.n << "\n";
 			nw.addNode(); 
 std::cerr << " n von nw NACH nw.addNode() : " << nw.n << "\n";
-			nw.addEdge(k - 1, partClassNeighbor); // add edge for new node (as we are in P_{k + 1} now)
+			nw.addEdge(nw.n - 1, partClassNeighbor); // add edge for new node (as we are in P_{k + 1} now)
+        //HIER FEHLER wollen k - 1 hinzufügen als Knoten Name, aber umbennung sorgt dafür dass k - 1 >= nw.n
 			std::cerr << " got partClNeighbor, nwNode and nwEdge \n";
             std::cerr << " so sieht nw nun aus nach neuer Kante und Ecke: \n";
             print(nw); 
 			HomomorphismCounting<int64_t> oldHom(nw, g); 
 			int64_t dg1HeuristicHom = oldHom.run(); // precompute to apply change if nwNode has dg == 1 
 std::cerr << " computed heuristicForHom \n";
-			for (int contractNode = 0; contractNode < k; contractNode += 1) {
+			for (int contractNode = 0; contractNode < nw.n; contractNode += 1) {
 				bool done = false; 
 				auto toContract = nw.dsu.get(contractNode); 
-
+            std::cerr << " wenn hier 1 rauskommt: " << (toContract != partClassNeighbor) << " , dann kontrahiere: " << toContract << " und " << partClassNeighbor << "\n";
 				if (toContract == partClassNeighbor) // gleiche Klasse wie Nachbar, daher keine Kontraktion erlaubt  
 					continue; 
 				
-				Graph res = contract(nw, k - 1, toContract); 
+				Graph res = contract(nw, k - 1, toContract); // HIER FEHLER wollen k - 1 hinzufügen als Knoten Name, aber umbennung sorgt dafür dass k - 1 >= nw.n
 				bool same = false; 
-std::cerr << " contracted smthing and now searching for isomorphisms \n";
+std::cerr << " contracted:" << toContract << " and " << k - 1 << " now searching for isomorphisms \n";
             std::cerr << " so sieht res nun aus nach Kontraktion von nw: \n";
             print(res); 
 				for (auto& [p2, h2]: nwSpasm) { // search for isomorphism and strong isomorphism
@@ -111,13 +112,15 @@ std::cerr << " running hom.run(): " << hom.run() << "\n";
 
 std::cerr << " passed an iteration round of getting from k to k + 1 \n";
         std::swap(nwSpasm, g.spasms); // swappe erst hier, da nun nwSpasm aktuell 
+
+std::cerr << " Größe von nwSpasm: " << g.spasms.size()  << "\n";
 		// hier nun mit neuem g.spasms die Subgraphen zählen 
         int64_t sub = 0; 
         for (auto [p, gr]: g.spasms) {
-            sub += p.second; 
+            sub += p.first * p.second; 
         }
 
-        std::cerr << " subgraphen von P_" << k - 1 << " in G ist: " << sub / int64_t(2) << "\n";
+        std::cerr << " subgraphen von P_" << k << " in G ist: " << sub / int64_t(2) << "\n";
 	}
 	return subgraphs / int64_t(2);// da P_k stets 2 Automorphismen hat f.countAutomorphisms(); 
 }
