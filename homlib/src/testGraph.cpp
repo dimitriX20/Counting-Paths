@@ -210,8 +210,29 @@ void testGenerateSpasm2() {
  
 }
 
+void testHomLib() {
+    Graph h(5); 
+	Graph k10(10); 
+	for (int i = 1; i < 5; i += 1) {
+		for (int j = i + 1; j < 5; j += 1) {
+			h.addEdge(i, j); 
+		}
+	}
+	 
+	
+	for (int i = 0; i < 10; i += 1) {
+		for (int j = i + 1; j < 10; j += 1) {
+			k10.addEdge(i, j); 
+		}
+	}
+
+	HomomorphismCounting<int64_t> hh(h, k10); 
+	assert(50400 == hh.run());
+}
+
 
 void runAllTests() {
+    testHomLib();
     testGenerateSpasm2();
     return;
    // testCountSubgraphs3();

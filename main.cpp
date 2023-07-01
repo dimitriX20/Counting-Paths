@@ -44,17 +44,17 @@ int main() {
 	// p12.addEdge(1, 211);  
 	//Graph gitterGraph = createGridGraph(6, 6); 
 
-	Graph g(10); 
-	for (int i = 0; i < 10; i += 1) {
-		for (int j = i + 1; j < 10; j += 1) {
-			g.addEdge(i,j); 
-		}
-	}
+	// Graph g(10); 
+	// for (int i = 0; i < 10; i += 1) {
+	// 	for (int j = i + 1; j < 10; j += 1) {
+	// 		g.addEdge(i,j); 
+	// 	}
+	// }
 
-	Graph p5 = getPk(10); 
-	SubgraphCounting<int64_t> s(p5, g); //1814400
+	// Graph p5 = getPk(10); 
+	// SubgraphCounting<int64_t> s(p5, g); //1814400
 
-	std::cout << s.countSubgraphs() << "\n"; // 1 262 816
+	// std::cout << s.countSubgraphs() << "\n"; // 1 262 816
 
 	//runAllTests();
 	// Endzeitpunkt erfassen
