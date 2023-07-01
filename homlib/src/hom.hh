@@ -1,11 +1,6 @@
 #pragma once
 
-#include <algorithm> // Für sort(), lower_bound(), set_intersection()
-#include <numeric> // Für accumulate()
-#include <unordered_map> // Für unordered_map()
-#include <vector> // Für vector()
-#include <set> // Für set_intersection()
-#include <iterator> // Für back_inserter()
+#include <bits/stdc++.h>
 #include "graph.hh"
 #include "treedec.hh"
 
@@ -39,22 +34,15 @@ struct HomomorphismCounting {
     DPTable I, J, K;
     std::vector<int> X;
     if (NTD.isLeaf(x)) {
-//std::cerr << "  NTD.isLeaf passed!\n";
       X = {NTD.vertex(x)};
-
-//std::cerr << "  NTD.isVertex passed!\n";
       for (int a = 0; a < G.n; ++a) {
         std::vector<int> phi = {a};
         I[phi] = 1;
-
-//std::cerr << "  I[phi] passed!\n";
       }
     } else if (NTD.isIntroduce(x)) {
-//std::cerr << "  NTD.isIntroduce(x) passed!\n";
       std::tie(J, X) = run(NTD.child(x));
-//std::cerr << "  std::tie(J, X) = run(NTD.child(x)); passed!\n";
       int p = std::distance(X.begin(), std::lower_bound(X.begin(), X.end(), NTD.vertex(x)));
-//std::cerr << "  p = std::distance(X.begin()... passed!\n";
+
       std::vector<int> candidate_id;
       int i = 0;
       for (auto v: F.adj[NTD.vertex(x)]) {
@@ -62,38 +50,47 @@ struct HomomorphismCounting {
         if (i == X.size()) break;
         if (X[i] == v) candidate_id.emplace_back(i);
       }
-//std::cerr << "  for (auto v: F.adj[NTD.vertex(x)]) .. komplette Schleife passed!\n";
-      if (candidate_id.empty()) {
-        candidate_id.resize(G.n);
-        std::iota(candidate_id.begin(), candidate_id.end(), 0);
+      
+      if (candidate_id.empty()) { 
+        // keine Nachbarn in F die auch in X sind: mappe also auf bel. Ecke in G
+        for (auto [phi, val]: J) {
+          auto psi = phi;
+          psi.insert(psi.begin()+p, 0);
+          for (int idx = 0; idx < G.n; idx += 1) {
+              psi[p] = idx;
+              I[psi] = val;
+          }
+        }
       }
-
-//std::cerr << "  if (candidate_id.empty() komplett passed!\n";
+//candidate_id.resize(G.n);
+//std::iota(candidate_id.begin(), candidate_id.end(), 0);
+    else {
       for (auto [phi, val]: J) {
-      //  std::cerr << "  Z.73!\n";
         std::vector<int> candidate_a;
         std::sort(candidate_id.begin(), candidate_id.end(), [&](int i, int j) {
           return G.adj[i].size() < G.adj[j].size();
         });
-       // std::cerr << "  Z.78!\n";
-        for (int i: candidate_id) {
-          if (i < 0 or i >= phi.size())
-            continue;
-          int a = phi[i];
-         // std::cerr << "  Z.81!\n";
+         
+        candidate_a = G.adj[phi[candidate_id[0]]]; // alle Nachbarn der ersten Ecke 
+        bool notHom = false; 
+        for (int i = 1; i < int(candidate_id.size()); i += 1) {
+        //  if (i < 0 or i >= phi.size())
+       //     continue;
+          int a = phi[candidate_id[i]];
           if (candidate_a.empty()) {
-            candidate_a = G.adj[a];
-            //std::cerr << "  Z.84!\n";
+            notHom = true; 
+            break; 
           } else {
             std::vector<int> temp; 
             std::set_intersection(candidate_a.begin(), candidate_a.end(),
                 G.adj[a].begin(), G.adj[a].end(), std::back_inserter(temp));
-        //  std::cerr << "  Z.89!\n";          
             candidate_a.swap(temp);
-//            std::cerr << "  Z.91!\n";
           }
         }
-//std::cerr << "  for (auto [phi, val]: J) { Schleife bis Z.94 komplett passed!\n";
+
+        if (notHom or candidate_a.empty()) 
+          continue; 
+
         auto psi = phi;
         psi.insert(psi.begin()+p, 0);
         for (int a: candidate_a) {
@@ -101,8 +98,8 @@ struct HomomorphismCounting {
           I[psi] = val;
         }
       }
+    }
       X.insert(X.begin()+p, NTD.vertex(x));
-//std::cerr << "  Zeile 103, also for aut [phi, val]: J und insert passed \n";
     } else if (NTD.isForget(x)) {
       std::tie(J, X) = run(NTD.child(x));
       int p = std::distance(X.begin(), std::lower_bound(X.begin(), X.end(), NTD.vertex(x)));
@@ -113,8 +110,6 @@ struct HomomorphismCounting {
         psi.erase(psi.begin() + p);
         I[psi] += val;
       }
-
-//std::cerr << "  Zeile 115 passed \n";
     } else if (NTD.isJoin(x)) {
       std::tie(J, X) = run(NTD.left(x));
       std::tie(K, X) = run(NTD.right(x));
@@ -123,7 +118,6 @@ struct HomomorphismCounting {
         if (K.count(phi)) I[phi] = val * K[phi];
       }
     }
- //   std::cerr << "  Zeile 124 passed \n";
     return std::make_pair(I, X);
   }
 };

@@ -51,6 +51,20 @@ void testCountSubgraphs2() {
 	assert(s2.countSubgraphs() == 8);
 }
 
+void testCountSubgraphs3() {
+	Graph g(8); 
+	for (int i = 0; i < 8; i += 1) {
+        for (int j = i + 1; j < 8; j += 1) {
+            g.addEdge(i, j); 
+        }
+    }
+	Graph p = getPk(5); 
+	SubgraphCounting<int64_t> s2(p, g);
+    int res = s2.countSubgraphs(); 
+    std::cerr << res << "\n";
+	assert(res == 3360);
+}
+
  
 void testIsomorph() {
     Graph nw1(8); 
@@ -87,7 +101,7 @@ void testContraction() {
     assert(contract(nwH, 0, 4) == cycle); 
 }
 
-void testOldNameContract() { // newly added might check interaction
+void testOldNameContract() {  
 	Graph g(4); 
 	g.addEdge(0,1); 
 	g.addEdge(0,2); 
@@ -95,10 +109,10 @@ void testOldNameContract() { // newly added might check interaction
 
     generateSpasm(g); 
     auto Y = g.spasms;
-    assert(Y.size() == 3); // funktioniert noch nicht
+    assert(Y.size() == 3);  
 
 	Graph h1 = contract(g, 1, 2);
-	auto X = h1.getNonNeighbors(); // funktioniert noch nicht
+	auto X = h1.getNonNeighbors();  
 	assert(X.size() == 1);
 
 	Graph h2 = contract(h1, 0, 2); 
@@ -150,7 +164,7 @@ void testGenerateSpasm() {
                          contract(p5, 0, 3), contract(getPk(4), 0, 3), contract(getPk(5), 1, 3)};
 
     bool isFine = true;  
-    for (auto g: spasm) { 
+    for (auto g: spasm) {  
         bool ok = false; 
         for (auto h: need) 
             ok |= h == g.second; 
@@ -163,7 +177,46 @@ void testGenerateSpasm() {
     assert(isFine);
 }
 
+void testGenerateSpasm2() {
+        std::vector<int64_t> factorials(21); 
+        factorials[0] = 1LL; 
+
+        for (int64_t i = 1; i < 21LL; i += 1LL) 
+            factorials[i] = factorials[i - 1] * i; 
+
+        auto getBlockFactors = [&](Graph& cur) -> int64_t {
+            int64_t ans = 1; 
+            std::vector<bool> vis(cur.n); 
+            for (int i = 0; i < cur.n; i += 1) {
+                int p = cur.dsu.get(i); 
+                if (not vis[p]) {
+                    ans *= factorials[int64_t(cur.dsu.size(p) - 1)];
+                    vis[p] = true; 
+                }
+            }
+            return ans; 
+        }; 
+
+        Graph p5 = getPk(5);
+        generateSpasm(p5); 
+        auto spasm = p5.spasms;
+        int64_t subgraphs = 0; 
+
+        for (auto i: spasm) {
+            int64_t coeff = i.first * 1LL * getBlockFactors(i.second); 
+            coeff *= (abs(p5.n - i.second.n) & 1 ? -1LL : 1LL); 
+
+            std::cerr << " anzahl: " << i.first << " Eckenanzahl: " << i.second.n << " Kantenanzahl" << i.second.m << " coeff: " << coeff << "/" << i.second.countAutomorphisms() << " \n";
+        }
+        return;
+ 
+}
+
+
 void runAllTests() {
+    testGenerateSpasm2();
+    return;
+   // testCountSubgraphs3();
 	testCountSubgraphs(); 
 	testCountSubgraphs2(); 
 	testOldNameContract();

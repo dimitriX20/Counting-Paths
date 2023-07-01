@@ -149,11 +149,12 @@ struct countPathsOnePair {
         }
 
         // ans = summe über alle: dp[mask][1] mit pop_count(mask) <= k + 1
+            // starte ab k = dist[s][t] + 1
         // initialisiere nur dp[1][1] = 1 (also Startecke 0 ist 1 in der mask)
 
         int64_t ans = 0; 
         for (int N = 3; N <= sz; N += 1) {
-            std::vector<vector<int64_t>> dp(1 << N, std::vector<int64_t> (N, 0LL));
+            std::vector<std::vector<int64_t>> dp(1 << N, std::vector<int64_t> (N, 0LL));
         }
 
         return ans; 
