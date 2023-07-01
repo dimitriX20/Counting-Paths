@@ -23,45 +23,45 @@ void test_tree() {
 	assert(hom.run() == homTree.run());
 }
 
-void testCountSubgraphs() {
-	Graph peter = createPetersonGraph(); 
-	Graph K13(4); 
-	K13.addEdge(0,1); 
-	K13.addEdge(0,2); 
-	K13.addEdge(0,3);
-	SubgraphCounting<int64_t> s(K13, peter); 
-	assert(s.countSubgraphs() == 10); 
-}
+// void testCountSubgraphs() {
+// 	Graph peter = createPetersonGraph(); 
+// 	Graph K13(4); 
+// 	K13.addEdge(0,1); 
+// 	K13.addEdge(0,2); 
+// 	K13.addEdge(0,3);
+// 	SubgraphCounting<int64_t> s(K13, peter); 
+// 	assert(s.countSubgraphs() == 10); 
+// }
 
-void testCountSubgraphs2() {
-	Graph g(10); 
-	g.addEdge(1, 0);
-	g.addEdge(2, 0);
-	g.addEdge(3, 2);
-	g.addEdge(4, 3);
-	g.addEdge(5, 4);
-	g.addEdge(6, 0);
-	g.addEdge(7, 5);
-	g.addEdge(8, 1);
-	g.addEdge(9, 5);
-	Graph p = getPk(4); 
-	SubgraphCounting<int64_t> s2(p, g);
-	assert(s2.countSubgraphs() == 8);
-}
+// void testCountSubgraphs2() {
+// 	Graph g(10); 
+// 	g.addEdge(1, 0);
+// 	g.addEdge(2, 0);
+// 	g.addEdge(3, 2);
+// 	g.addEdge(4, 3);
+// 	g.addEdge(5, 4);
+// 	g.addEdge(6, 0);
+// 	g.addEdge(7, 5);
+// 	g.addEdge(8, 1);
+// 	g.addEdge(9, 5);
+// 	Graph p = getPk(4); 
+// 	SubgraphCounting<int64_t> s2(p, g);
+// 	assert(s2.countSubgraphs() == 8);
+// }
 
-void testCountSubgraphs3() {
-	Graph g(8); 
-	for (int i = 0; i < 8; i += 1) {
-        for (int j = i + 1; j < 8; j += 1) {
-            g.addEdge(i, j); 
-        }
-    }
-	Graph p = getPk(5); 
-	SubgraphCounting<int64_t> s2(p, g);
-    int res = s2.countSubgraphs(); 
-    std::cerr << res << "\n";
-	assert(res == 3360);
-}
+// void testCountSubgraphs3() {
+// 	Graph g(8); 
+// 	for (int i = 0; i < 8; i += 1) {
+//         for (int j = i + 1; j < 8; j += 1) {
+//             g.addEdge(i, j); 
+//         }
+//     }
+// 	Graph p = getPk(5); 
+// 	SubgraphCounting<int64_t> s2(p, g);
+//     int res = s2.countSubgraphs(); 
+//     std::cerr << res << "\n";
+// 	assert(res == 3360);
+// }
 
  
 void testIsomorph() {
@@ -77,6 +77,10 @@ void testIsomorph() {
     assert(nw1 == nw2); 
     assert(nw1 != nw3); 
     assert(nw1 != nw4);  
+}
+
+void testStrongIsomorph() { // TODO 
+
 }
 
 void testContraction() {
@@ -99,26 +103,26 @@ void testContraction() {
     assert(contract(nwH, 0, 4) == cycle); 
 }
 
-void testOldNameContract() {  
-	Graph g(4); 
-	g.addEdge(0,1); 
-	g.addEdge(0,2); 
-	g.addEdge(0,3); 
+// void testOldNameContract() {  // aufgrund der neuen Art und Weise spasms zu generieren nicht mehr relevanter test
+// 	Graph g(4); 
+// 	g.addEdge(0,1); 
+// 	g.addEdge(0,2); 
+// 	g.addEdge(0,3); 
 
-    generateSpasm(g); 
-    auto Y = g.spasms;
-    assert(Y.size() == 3);  
+//     generateSpasm(g); 
+//     auto Y = g.spasms;
+//     assert(Y.size() == 3);  
 
-	Graph h1 = contract(g, 1, 2);
-	auto X = h1.getNonNeighbors();  
-	assert(X.size() == 1);
+// 	Graph h1 = contract(g, 1, 2);
+// 	auto X = h1.getNonNeighbors();  
+// 	assert(X.size() == 1);
 
-	Graph h2 = contract(h1, 0, 2); 
-	assert(h2.dsu.size(0) == 1); 
-	assert(h2.dsu.size(1) == 3); 
-	assert(h2.oldName[0] == 1); 
-	assert(h2.oldName[1] == 0);
-}
+// 	Graph h2 = contract(h1, 0, 2); 
+// 	assert(h2.dsu.size(0) == 1); 
+// 	assert(h2.dsu.size(1) == 3); 
+// 	assert(h2.oldName[0] == 1); 
+// 	assert(h2.oldName[1] == 0);
+// }
 
 void testContractionDSU() {
     Graph g = getPk(5);
@@ -153,62 +157,62 @@ void testContractionDSU() {
 }
 
 
-void testGenerateSpasm() {
-    Graph p5 = getPk(5);
-    generateSpasm(p5); 
-    auto spasm = p5.spasms;
+// void testGenerateSpasm() {// nicht mehr relevanter test nach Umbau 
+//     Graph p5 = getPk(5);
+//     generateSpasm(p5); 
+//     auto spasm = p5.spasms;
 
-    std::vector<Graph> need = {p5, getPk(4), getPk(3), getPk(2), contract(p5, 0, 4),
-                         contract(p5, 0, 3), contract(getPk(4), 0, 3), contract(getPk(5), 1, 3)};
+//     std::vector<Graph> need = {p5, getPk(4), getPk(3), getPk(2), contract(p5, 0, 4),
+//                          contract(p5, 0, 3), contract(getPk(4), 0, 3), contract(getPk(5), 1, 3)};
 
-    bool isFine = true;  
-    for (auto g: spasm) {  
-        bool ok = false; 
-        for (auto h: need) 
-            ok |= h == g.second; 
+//     bool isFine = true;  
+//     for (auto g: spasm) {  
+//         bool ok = false; 
+//         for (auto h: need) 
+//             ok |= h == g.second; 
 
-        isFine = isFine and ok; 
-        if (not isFine) 
-            break; 
-    }
+//         isFine = isFine and ok; 
+//         if (not isFine) 
+//             break; 
+//     }
 
-    assert(isFine);
-}
+//     assert(isFine);
+// }
 
-void testGenerateSpasm2() {
-        std::vector<int64_t> factorials(21); 
-        factorials[0] = 1LL; 
+// void testGenerateSpasm2() {
+//         std::vector<int64_t> factorials(21); 
+//         factorials[0] = 1LL; 
 
-        for (int64_t i = 1; i < 21LL; i += 1LL) 
-            factorials[i] = factorials[i - 1] * i; 
+//         for (int64_t i = 1; i < 21LL; i += 1LL) 
+//             factorials[i] = factorials[i - 1] * i; 
 
-        auto getBlockFactors = [&](Graph& cur) -> int64_t {
-            int64_t ans = 1; 
-            std::vector<bool> vis(cur.n); 
-            for (int i = 0; i < cur.n; i += 1) {
-                int p = cur.dsu.get(i); 
-                if (not vis[p]) {
-                    ans *= factorials[int64_t(cur.dsu.size(p) - 1)];
-                    vis[p] = true; 
-                }
-            }
-            return ans; 
-        }; 
+//         auto getBlockFactors = [&](Graph& cur) -> int64_t {
+//             int64_t ans = 1; 
+//             std::vector<bool> vis(cur.n); 
+//             for (int i = 0; i < cur.n; i += 1) {
+//                 int p = cur.dsu.get(i); 
+//                 if (not vis[p]) {
+//                     ans *= factorials[int64_t(cur.dsu.size(p) - 1)];
+//                     vis[p] = true; 
+//                 }
+//             }
+//             return ans; 
+//         }; 
 
-        Graph p5 = getPk(5);
-        generateSpasm(p5); 
-        auto spasm = p5.spasms;
-        int64_t subgraphs = 0; 
+//         Graph p5 = getPk(5);
+//         generateSpasm(p5); 
+//         auto spasm = p5.spasms;
+//         int64_t subgraphs = 0; 
 
-        for (auto i: spasm) {
-            int64_t coeff = i.first * 1LL * getBlockFactors(i.second); 
-            coeff *= (abs(p5.n - i.second.n) & 1 ? -1LL : 1LL); 
+//         for (auto i: spasm) {
+//             int64_t coeff = i.first * 1LL * getBlockFactors(i.second); 
+//             coeff *= (abs(p5.n - i.second.n) & 1 ? -1LL : 1LL); 
 
-            std::cerr << " anzahl: " << i.first << " Eckenanzahl: " << i.second.n << " Kantenanzahl" << i.second.m << " coeff: " << coeff << "/" << i.second.countAutomorphisms() << " \n";
-        }
-        return;
+//            // std::cerr << " anzahl: " << i.first << " Eckenanzahl: " << i.second.n << " Kantenanzahl" << i.second.m << " coeff: " << coeff << "/" << i.second.countAutomorphisms() << " \n";
+//         }
+//         return;
  
-}
+// }
 
 void testHomLib() {
     Graph h(5); 
@@ -233,15 +237,14 @@ void testHomLib() {
 
 void runAllTests() {
     testHomLib();
-    testGenerateSpasm2();
-    return;
-   // testCountSubgraphs3();
-	testCountSubgraphs(); 
-	testCountSubgraphs2(); 
-	testOldNameContract();
+//testGenerateSpasm2(); 
+// testCountSubgraphs3();
+//testCountSubgraphs(); 
+//testCountSubgraphs2(); 
+	//testOldNameContract();
     testContractionDSU;
     testIsomorph(); 
     testContraction(); 
-    testGenerateSpasm();
+// testGenerateSpasm();
 	test_tree(); 
 }

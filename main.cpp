@@ -32,6 +32,28 @@ int main() {
 	// Startzeitpunkt erfassen
 	auto startTime = std::chrono::high_resolution_clock::now();
 
+	// Graph p4 = getPk(4); 
+	// p4.addEdge(0, 2); 
+
+	Graph g(8); 
+	for (int i = 1; i < 8; i += 1) {
+		for (int j = i + 1; j < 8; j += 1) {
+			g.addEdge(i, j); 
+		}
+	}
+	countSubgraphs(g, 6);
+	// g.addEdge(0, 5); 
+
+	// HomomorphismCounting<int64_t> hh(p4, g); 
+	// for (int i = 0; i < 5; i += 1) {
+	// 	if (i == 3) 
+	// 		continue; 
+	// 	Graph nwGraph = p4;
+	// 	nwGraph.addNode(); 
+	// 	nwGraph.addEdge(nwGraph.dsu.get(3), 4); 
+	// 	Graph nw = contract(nwGraph, i, 4); 
+	// }
+
 	//Graph p11 = getPk(11); 
 	//generateSpasm(p11); 
 	//std::cout << " " << p11.spasms.size() << "\n";
@@ -56,7 +78,7 @@ int main() {
 
 	// std::cout << s.countSubgraphs() << "\n"; // 1 262 816
 
-	//runAllTests();
+	runAllTests();
 	// Endzeitpunkt erfassen
 	auto endTime = std::chrono::high_resolution_clock::now();
 

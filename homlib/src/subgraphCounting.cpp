@@ -3,89 +3,208 @@
 #include <iostream>
 #include <future> // Für std::async und std::future
 
-template <class Value>
-struct SubgraphCounting {
-    Graph H;
-    Graph G;
+int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 
-    SubgraphCounting(Graph _H, Graph _G) : H(_H), G(_G) {}
+std::cerr << " starting method countSubgraphs  \n";
+	N = std::min(N, size_t(g.n));
 
-    Value countSubgraphs() {
-        if (H.n > G.n or H.m > G.m)
-            return 0;
+	if (N == 1) 
+		return g.m;
 
-        std::vector<Value> factorials(21); 
-        factorials[0] = 1LL; 
+	std::vector<int64_t> factorials(21); 
+	factorials[0] = 1LL; 
 
-        for (Value i = 1; i < 21LL; i += 1LL) 
-            factorials[i] = factorials[i - 1] * i; 
+	for (int64_t i = 1; i < 21LL; i += 1LL) 
+		factorials[i] = factorials[i - 1] * i; 
 
-        auto getBlockFactors = [&](Graph& cur) -> Value {
-            Value ans = 1; 
-            std::vector<bool> vis(cur.n); 
-            for (int i = 0; i < cur.n; i += 1) {
-                int p = cur.dsu.get(i); 
-                if (not vis[p]) {
-                    ans *= factorials[Value(cur.dsu.size(p) - 1)];
-                    vis[p] = true; 
-                }
-            }
-            return ans; 
-        }; 
+	auto getBlockFactors = [&](Graph& cur) -> int64_t {
+		int64_t ans = 1; 
+		std::vector<bool> vis(cur.n); 
+		for (int i = 0; i < cur.n; i += 1) {
+			int p = cur.dsu.get(i); 
+			if (not vis[p]) {
+				ans *= factorials[int(cur.dsu.size(p) - 1)];
+				vis[p] = true; 
+			}
+		}
+		return ans; 
+	}; 
+	
+	size_t k = 2; 
+    Graph p2 = getPk(2);
+	g.spasms.push_back({{1LL, int64_t(2 * g.m)}, p2}); // hom(p_2, g) == 2 * nrEdgesOfG
+	int64_t subgraphs = (N == 1 ? 0 : g.m); 
+	std::cerr << " now we get while (k < N): \n";
+	while (k < N) { // efficiently transform k to k + 1 
+		k += 1; 
+// ENSURE that we update coeff correctly: for example k = 2 
+		if (g.n < k or g.m < k - 1) // test if P_k+1 has more nodes or edges than g 
+			break; 
 
-        generateSpasm(H); 
-        std::vector<std::pair<int, Graph>> spasm = H.spasms; 
-        Value subgraphs = 0; 
+        std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> nwSpasm; 
 
-        bool parallelisieren = H.spasms.size() >= 15; 
-        long long summe = 0; 
-        if (not parallelisieren) {
-            for (auto& h: spasm) {
-                HomomorphismCounting<Value> homCounter(h.second, G);
-                Value coeff = h.first * 1LL * getBlockFactors(h.second); 
-                coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); 
-                subgraphs += coeff * homCounter.run(); 
-                summe += h.first;
-            }
-            //std::cerr << " summe für k = 10: " << summe << "\n";
-            Value automorphisms = 0; 
-            std::vector<Graph> connectedComponentsH = connectedComponents(H); 
+	std::cerr << " now start with iterating over g.spasms \n";
+		for (auto& [p, h]: g.spasms) {
+			Graph nw = h; // copy old spasm graph
+			auto partClassNeighbor = nw.dsu.get(k - 2); 
+std::cerr << " n von nw vor nw.addNode() : " << nw.n << "\n";
+			nw.addNode(); 
+std::cerr << " n von nw NACH nw.addNode() : " << nw.n << "\n";
+			nw.addEdge(k - 1, partClassNeighbor); // add edge for new node (as we are in P_{k + 1} now)
+			std::cerr << " got partClNeighbor, nwNode and nwEdge \n";
+            std::cerr << " so sieht nw nun aus nach neuer Kante und Ecke: \n";
+            print(nw); 
+			HomomorphismCounting<int64_t> oldHom(nw, g); 
+			int64_t dg1HeuristicHom = oldHom.run(); // precompute to apply change if nwNode has dg == 1 
+std::cerr << " computed heuristicForHom \n";
+			for (int contractNode = 0; contractNode < k; contractNode += 1) {
+				bool done = false; 
+				auto toContract = nw.dsu.get(contractNode); 
 
-            for (auto& h: connectedComponentsH)
-                automorphisms += h.countAutomorphisms();
+				if (toContract == partClassNeighbor) // gleiche Klasse wie Nachbar, daher keine Kontraktion erlaubt  
+					continue; 
+				
+				Graph res = contract(nw, k - 1, toContract); 
+				bool same = false; 
+std::cerr << " contracted smthing and now searching for isomorphisms \n";
+            std::cerr << " so sieht res nun aus nach Kontraktion von nw: \n";
+            print(res); 
+				for (auto& [p2, h2]: nwSpasm) { // search for isomorphism and strong isomorphism
+					if (h2 == res)							
+						same = true; 
+					
+					if (not same) 
+						continue; 
 
-            return subgraphs / automorphisms; 
-        } 
+					if (strongIsomorph(h2, res)) { // now as we are isomorph, therefore test for strong isomorphism 
+						done = true; 
+						break; 
+					}
 
-        std::vector<std::future<Value>> futures1;
-        for (auto& h: spasm) {
-            futures1.emplace_back(std::async(std::launch::async, [&] {
-                HomomorphismCounting<Value> homCounter(h.second, G);
-                Value coeff = h.first * 1LL * getBlockFactors(h.second); 
-                coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL);
-                return coeff * homCounter.run();
-            }));
+					if (same) { // we assume that hom(res) doesn't change if graphs are isomorph; so we reuse the hom nr.
+                        nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), p2.second}, res});
+						break; 
+					}
+				}
+std::cerr << " passed isomorphism checking \n";
+				if (done) 
+					continue; 
+
+				if (not same) { // found unique spasm graph. therefore, compute hom number or use precomputed value
+    //if (res.adj[res.dsu.get(k - 1)].size() == 1) 
+//		nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), dg1HeuristicHom * int64_t(g.n - 1)}, res}); 
+    //else {
+
+std::cerr << " countingHom res, g \n";  
+std::cerr << " printing res graph: "; 
+print(res); 
+						HomomorphismCounting<int64_t> hom(res, g); 
+
+std::cerr << " blockfactors(res): " << getBlockFactors(res) << "\n";
+
+std::cerr << " running hom.run(): " << hom.run() << "\n";
+						nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), hom.run()}, res});
+					}
+//}
+			}
+		}
+
+std::cerr << " passed an iteration round of getting from k to k + 1 \n";
+        std::swap(nwSpasm, g.spasms); // swappe erst hier, da nun nwSpasm aktuell 
+		// hier nun mit neuem g.spasms die Subgraphen zählen 
+        int64_t sub = 0; 
+        for (auto [p, gr]: g.spasms) {
+            sub += p.second; 
         }
 
-        for (auto &future : futures1) 
-            subgraphs += future.get();
+        std::cerr << " subgraphen von P_" << k - 1 << " in G ist: " << sub / int64_t(2) << "\n";
+	}
+	return subgraphs / int64_t(2);// da P_k stets 2 Automorphismen hat f.countAutomorphisms(); 
+}
 
-        Value automorphisms = 0; 
-        std::vector<Graph> connectedComponentsH = connectedComponents(H); 
+// template <class Value>
+// struct SubgraphCounting {
+//     Graph H;
+//     Graph G;
 
-        std::vector<std::future<Value>> futures2;
-        for (auto& h: connectedComponentsH) {
-            futures2.emplace_back(std::async(std::launch::async, [&] {
-                return h.countAutomorphisms();
-            }));
-        }
+//     SubgraphCounting(Graph _H, Graph _G) : H(_H), G(_G) {}
 
-        for (auto &future : futures2) 
-            automorphisms += future.get();
+//     Value countSubgraphs() {
+//         if (H.n > G.n or H.m > G.m)
+//             return 0;
+
+//         std::vector<Value> factorials(21); 
+//         factorials[0] = 1LL; 
+
+//         for (Value i = 1; i < 21LL; i += 1LL) 
+//             factorials[i] = factorials[i - 1] * i; 
+
+//         auto getBlockFactors = [&](Graph& cur) -> Value {
+//             Value ans = 1; 
+//             std::vector<bool> vis(cur.n); 
+//             for (int i = 0; i < cur.n; i += 1) {
+//                 int p = cur.dsu.get(i); 
+//                 if (not vis[p]) {
+//                     ans *= factorials[Value(cur.dsu.size(p) - 1)];
+//                     vis[p] = true; 
+//                 }
+//             }
+//             return ans; 
+//         }; 
+
+//         generateSpasm(H); 
+//         auto spasm = H.spasms; 
+//         Value subgraphs = 0; 
+
+//         bool parallelisieren = H.spasms.size() >= 15; 
+//        // long long summe = 0; 
+//         if (not parallelisieren) {
+//             for (auto& h: spasm) {
+//                 HomomorphismCounting<Value> homCounter(h.second, G);
+//                 Value coeff = h.first * 1LL * getBlockFactors(h.second); 
+//                 coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL); 
+//                 subgraphs += coeff * homCounter.run(); 
+//                 //summe += h.first;
+//             }
+//             //std::cerr << " summe für k = 10: " << summe << "\n";
+//             Value automorphisms = 0; 
+//             std::vector<Graph> connectedComponentsH = connectedComponents(H); 
+
+//             for (auto& h: connectedComponentsH)
+//                 automorphisms += h.countAutomorphisms();
+
+//             return subgraphs / automorphisms; 
+//         } 
+
+//         std::vector<std::future<Value>> futures1;
+//         for (auto& h: spasm) {
+//             futures1.emplace_back(std::async(std::launch::async, [&] {
+//                 HomomorphismCounting<Value> homCounter(h.second, G);
+//                 Value coeff = h.first * 1LL * getBlockFactors(h.second); 
+//                 coeff *= (abs(H.n - h.second.n) & 1 ? -1LL : 1LL);
+//                 return coeff * homCounter.run();
+//             }));
+//         }
+
+//         for (auto &future : futures1) 
+//             subgraphs += future.get();
+
+//         Value automorphisms = 0; 
+//         std::vector<Graph> connectedComponentsH = connectedComponents(H); 
+
+//         std::vector<std::future<Value>> futures2;
+//         for (auto& h: connectedComponentsH) {
+//             futures2.emplace_back(std::async(std::launch::async, [&] {
+//                 return h.countAutomorphisms();
+//             }));
+//         }
+
+//         for (auto &future : futures2) 
+//             automorphisms += future.get();
         
-        return subgraphs / automorphisms; 
-    }
-};
+//         return subgraphs / automorphisms; 
+//     }
+// };
 
 struct countPathsOnePair {
     Graph g;

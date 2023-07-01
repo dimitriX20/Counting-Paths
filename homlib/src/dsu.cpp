@@ -20,4 +20,12 @@ struct DSU {
 		e[y] = x;
 		return true;
 	}
+
+	void resize(int N) {
+		if (e.size() >= N) 
+			return;
+			
+		e.resize(N); 
+		e[N - 1] = -1; 
+	}
 };
