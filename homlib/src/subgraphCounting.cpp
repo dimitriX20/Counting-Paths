@@ -83,7 +83,7 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 					if (h2 == res){
 						same = true; 
                         saveGraph = res; 
-                        savePair = {getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), p2.second};
+                        savePair = {getBlockFactors(res) * (abs(int(k) - res.n) & 1 ? -1LL : 1LL), p2.second};
                     }						
 					
 					if (not same) 
@@ -103,7 +103,7 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 
 				if (not same) {  
                     HomomorphismCounting<__int128> hom(res, g); 
-                    nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? __int128(-1) : __int128(1)), hom.run()}, res});
+                    nwSpasm.push_back({{getBlockFactors(res) * (abs(int(k) - res.n) & 1 ? __int128(-1) : __int128(1)), hom.run()}, res});
                 }             
 			}
 		}

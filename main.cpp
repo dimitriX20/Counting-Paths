@@ -35,13 +35,13 @@ int main() {
 	// Graph p4 = getPk(4); 
 	// p4.addEdge(0, 2); 
 
-	Graph g(8); 
-	for (int i = 0; i < 8; i += 1) {
-		for (int j = i + 1; j < 8; j += 1) {
+	Graph g(11); 
+	for (int i = 0; i < 11; i += 1) {
+		for (int j = i + 1; j < 11; j += 1) {
 			g.addEdge(i, j); 
 		}
 	}
-	countSubgraphs(g, 8);
+	countSubgraphs(g, 10);
 	// g.addEdge(0, 5); 
 
 	// HomomorphismCounting<int64_t> hh(p4, g); 
