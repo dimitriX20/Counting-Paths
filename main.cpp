@@ -41,7 +41,7 @@ int main() {
 			g.addEdge(i, j); 
 		}
 	}
-	countSubgraphs(g, 6);
+	countSubgraphs(g, 8);
 	// g.addEdge(0, 5); 
 
 	// HomomorphismCounting<int64_t> hh(p4, g); 

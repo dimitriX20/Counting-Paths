@@ -233,7 +233,7 @@ void print(const Graph& g) {
 	}
 }
 
-Graph contract(Graph& h, int v, int u) {  
+Graph contract(Graph h, int v, int u) {  
 	if (v >= h.n or u >= h.n or u < 0 or v < 0) // we assume that v and u are the new names 
 		return Graph(0); 
 
@@ -382,4 +382,15 @@ Graph createPetersonGraph() {
     peterson.addEdge(6, 8);
     peterson.addEdge(8, 5);
     return peterson;
+}
+
+void printPartitionClassesOfGraph(Graph res) {
+		std::cerr << res.n << " " << res.m << "\n";
+		for (int i = 0; i < res.n; i += 1) {
+			std::cerr << "Ecke: " << i + 1 << ": ";
+			for (int j: res.partClasses[i]) 
+				std::cerr << " " << j + 1 << " "; 
+		std::cerr << "\n";
+		}
+		std::cerr << "\n";
 }

@@ -36,8 +36,6 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
         std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> nwSpasm; 
 		for (auto& [p, h]: g.spasms) {
 			Graph nw = h; 
-            HomomorphismCounting<int64_t> oldHom(nw, g); 
-			int64_t dg1HeuristicHom = oldHom.run();
 
             nw.addNextNodeAndEdge();
             auto neighbor = nw.nwName[k - 2]; 
@@ -49,13 +47,18 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 				if (toContract == neighbor)  
 					continue; 
 
-				Graph res = contract(nw, nw.nwName[k - 1], toContract); // toContract ist bereits neuer Name 
-				bool same = false; 
-                std::pair<std::pair<int64_t, int64_t>, Graph> save = {{1, 2}, nw}; // placeholder values
+				Graph res = contract(nw, toContract, nw.nwName[k - 1]); // toContract ist bereits neuer Name 
+
+				bool same = false;  
+                Graph saveGraph(0);
+                std::pair<int64_t, int64_t> savePair;  
 
 				for (auto& [p2, h2]: nwSpasm) { // search for isomorphism and strong isomorphism
-					if (h2 == res)							
+					if (h2 == res){
 						same = true; 
+                        saveGraph = res; 
+                        savePair = {getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), p2.second};
+                    }						
 					
 					if (not same) 
 						continue; 
@@ -64,40 +67,28 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 						done = true; 
 						break; 
 					}
-
-					if (same) { // we assume that hom(res) doesn't change if graphs are isomorph; so we reuse the hom nr.
-                        save.first = {getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), p2.second};
-                        save.second = res;
-						break; 
-					}
 				}
                 
                 if (done) 
 					continue; 
 
                 if (same) 
-                    nwSpasm.push_back(save); 
+                    nwSpasm.emplace_back(savePair, saveGraph);
 
-				if (not same) { // found unique spasm graph. therefore, compute hom number or use precomputed value
-                    //if (res.adj[res.dsu.get(k - 1)].size() == 1) 
-                //		nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), dg1HeuristicHom * int64_t(g.n - 1)}, res}); 
-                    //else {
-
+				if (not same) {  
                     HomomorphismCounting<int64_t> hom(res, g); 
                     nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), hom.run()}, res});
-                }
-//}
+                }             
 			}
 		}
-
         std::swap(nwSpasm, g.spasms);  
         std::cerr << " Größe von g.spasms: " << g.spasms.size()  << "\n";
-
-        int64_t sub = 0; 
+ 
+        __int128 sub = 0; 
         for (auto [p, gr]: g.spasms) 
-            sub += p.first * p.second; 
+            sub += static_cast<__int128>(p.first) * p.second; 
         
-        std::cerr << " subgraphen von P_" << k << " in G ist: " << sub / int64_t(2) << "\n";
+        //std::cout << " subgraphen von P_" << k << " in G ist: " << sub / __int128(2) << "\n"; need to overload operator to print __int128
 	}
 
 	return subgraphs / int64_t(2);
