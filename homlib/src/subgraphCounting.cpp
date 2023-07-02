@@ -34,29 +34,24 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 			break; 
 
         std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> nwSpasm; 
-	    //std::cerr << " now start with iterating over g.spasms \n";
-
 		for (auto& [p, h]: g.spasms) {
-			Graph nw = h; // copy old spasm graph 
-            nw.addNextNodeAndEdge();
-            auto partClassNeighbor = nw.nwName[k - 2]; 
-			
+			Graph nw = h; 
             HomomorphismCounting<int64_t> oldHom(nw, g); 
-			int64_t dg1HeuristicHom = oldHom.run(); // precompute to apply change if nwNode has dg == 1 
+			int64_t dg1HeuristicHom = oldHom.run();
 
-			for (int contractNode = 0; contractNode < nw.n; contractNode += 1) {
+            nw.addNextNodeAndEdge();
+            auto neighbor = nw.nwName[k - 2]; 
+
+			for (int contractNode = 0; contractNode < k; contractNode += 1) {
 				bool done = false; 
 				auto toContract = nw.nwName[contractNode];
 
-				if (toContract != partClassNeighbor) // gleiche Klasse wie Nachbar, daher keine Kontraktion erlaubt  
+				if (toContract == neighbor)  
 					continue; 
 
 				Graph res = contract(nw, nw.nwName[k - 1], toContract); // toContract ist bereits neuer Name 
 				bool same = false; 
-
-                std::cerr << " contracted:" << toContract << " and " << nw.nwName[k - 1] << " now searching for isomorphisms \n";
-                std::cerr << " so sieht res nun aus nach Kontraktion \n";
-                print(res); 
+                std::pair<std::pair<int64_t, int64_t>, Graph> save = {{1, 2}, nw}; // placeholder values
 
 				for (auto& [p2, h2]: nwSpasm) { // search for isomorphism and strong isomorphism
 					if (h2 == res)							
@@ -66,54 +61,46 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 						continue; 
  
 					if (strongIsomorph(h2, res)) { // now as we are isomorph, therefore test for strong isomorphism 
-                        //std::cerr << " we are strongly isomorphic! \n";
 						done = true; 
 						break; 
 					}
 
 					if (same) { // we assume that hom(res) doesn't change if graphs are isomorph; so we reuse the hom nr.
-                        nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), p2.second}, res});
+                        save.first = {getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), p2.second};
+                        save.second = res;
 						break; 
 					}
 				}
                 
-                std::cerr << " passed isomorphism checking \n";
-				
                 if (done) 
 					continue; 
+
+                if (same) 
+                    nwSpasm.push_back(save); 
 
 				if (not same) { // found unique spasm graph. therefore, compute hom number or use precomputed value
                     //if (res.adj[res.dsu.get(k - 1)].size() == 1) 
                 //		nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), dg1HeuristicHom * int64_t(g.n - 1)}, res}); 
                     //else {
 
-                    std::cerr << " countingHom res, g \n";  
-                    std::cerr << " printing res graph: "; 
-                    print(res); 
                     HomomorphismCounting<int64_t> hom(res, g); 
-
-                    std::cerr << " blockfactors(res): " << getBlockFactors(res) << "\n";
-
-                    std::cerr << " running hom.run(): " << hom.run() << "\n";
                     nwSpasm.push_back({{getBlockFactors(res) * ((k - res.n) & 1 ? -1LL : 1LL), hom.run()}, res});
                 }
 //}
 			}
 		}
 
-        //std::cerr << " passed an iteration round of getting from k to k + 1 \n";
-        std::swap(nwSpasm, g.spasms); // swappe erst hier, da nun nwSpasm aktuell 
+        std::swap(nwSpasm, g.spasms);  
+        std::cerr << " Größe von g.spasms: " << g.spasms.size()  << "\n";
 
-        std::cerr << " Größe von nwSpasm: " << g.spasms.size()  << "\n";
-		// hier nun mit neuem g.spasms die Subgraphen zählen 
         int64_t sub = 0; 
-        for (auto [p, gr]: g.spasms) {
+        for (auto [p, gr]: g.spasms) 
             sub += p.first * p.second; 
-        }
-
+        
         std::cerr << " subgraphen von P_" << k << " in G ist: " << sub / int64_t(2) << "\n";
 	}
-	return subgraphs / int64_t(2);// da P_k stets 2 Automorphismen hat f.countAutomorphisms(); 
+
+	return subgraphs / int64_t(2);
 }
 
 

@@ -36,7 +36,7 @@ int main() {
 	// p4.addEdge(0, 2); 
 
 	Graph g(8); 
-	for (int i = 1; i < 8; i += 1) {
+	for (int i = 0; i < 8; i += 1) {
 		for (int j = i + 1; j < 8; j += 1) {
 			g.addEdge(i, j); 
 		}
