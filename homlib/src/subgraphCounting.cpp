@@ -18,14 +18,9 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 
 	auto getBlockFactors = [&](Graph& cur) -> int64_t {
 		int64_t ans = 1; 
-		std::vector<bool> vis(cur.n); 
-		for (int i = 0; i < cur.n; i += 1) {
-			int p = cur.dsu.get(i); 
-			if (not vis[p]) {
-				ans *= factorials[int(cur.dsu.size(p) - 1)];
-				vis[p] = true; 
-			}
-		}
+		for (int i = 0; i < cur.n; i += 1) 
+            ans *= factorials[cur.partClasses[i].size() - 1]; 
+		
 		return ans; 
 	}; 
  
@@ -48,7 +43,7 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
             std::cerr << " nw.dsu.get(" << k - 2 << ") : " << nw.dsu.get(k - 2) << "\n";
             std::cerr << " größe von nwName: " << nw.nwName.size() << "\n";
 			
-            auto partClassNeighbor = nw.nwName[k - 2]; // oder evlt. nwName[nw.dsu.get(k - 2)]
+            auto partClassNeighbor = nw.nwName[k - 2]; // oder evtl. nwName[nw.dsu.get(k - 2)]
             std::cerr << " partClassNeighbor: " << partClassNeighbor << "\n";
             
             nw.addNextNodeAndEdge();
