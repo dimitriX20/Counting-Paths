@@ -237,9 +237,9 @@ Graph contract(Graph& h, int v, int u) {
 	if (v >= h.n or u >= h.n or u < 0 or v < 0) // we assume that v and u are the new names 
 		return Graph(0); 
 
-	bool nichtBenachbart = h.s[u].find(u) == h.s[u].end(); 
-	#include <cassert>
-	assert(nichtBenachbart); 
+	//bool nichtBenachbart = h.s[u].find(u) == h.s[u].end(); 
+	//#include <cassert>
+	//assert(nichtBenachbart); 
 
 	if (v == u) 
 		return h; 
