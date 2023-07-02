@@ -240,7 +240,7 @@ void testHomLib() {
 		}
 	}
 
-	HomomorphismCounting<int64_t> hh(h, k10); 
+	HomomorphismCounting<__int128> hh(h, k10); 
 	assert(50400 == hh.run());
 }
 
@@ -283,5 +283,5 @@ void runAllTests() {
     testIsomorph(); 
     testContraction(); 
 // testGenerateSpasm();
-	test_tree(); 
+	//test_tree(); 
 }

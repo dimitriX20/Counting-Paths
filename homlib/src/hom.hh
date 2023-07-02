@@ -15,7 +15,7 @@ struct HomomorphismCounting {
   }
   struct VectorHash {
     size_t operator()(const std::vector<int> &x) const {
-      constexpr size_t p = 1e9+7;
+      constexpr uint64_t p = 1e9+7;
       size_t hash = 0;
       for(int i = 0; i < x.size(); ++i) {
         hash += p * hash + x[i];
