@@ -23,8 +23,8 @@ struct Graph {
 	std::vector<std::set<int>> s; 
 	std::vector<int> oldName; 
 	std::vector<int> nwName; 
-	std::unordered_map<int, std::vector<int>> partClasses; // store for i \in {0, ... n - 1} nodes in their partition 
-	std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> spasms;
+	std::unordered_map <int, std::vector<int>> partClasses; // store for i \in {0, ... n - 1} nodes in their partition 
+	std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> spasms; // format: {{coeff, homNumber}, GraphInSpasmOf(G)}
 
 	Graph(int n) : n(n), adj(n), s(n), m(0), oldName(n), nwName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
@@ -152,6 +152,7 @@ struct Graph {
 			s = other.s;
 			oldName = other.oldName; 
 			nwName = other.nwName; 
+			partClasses = other.partClasses; 
 	}
 
 	// Assignment operator
@@ -164,6 +165,7 @@ struct Graph {
 					s = other.s;
 					oldName = other.oldName;
 					nwName = other.nwName; 
+					partClasses = other.partClasses; 
 			}
 			return *this;
 	}
@@ -231,7 +233,7 @@ void print(const Graph& g) {
 	}
 }
 
-Graph contract(const Graph& h, int v, int u) {  
+Graph contract(Graph& h, int v, int u) {  
 	if (v >= h.n or u >= h.n or u < 0 or v < 0) // we assume that v and u are the new names 
 		return Graph(0); 
 
@@ -251,14 +253,22 @@ Graph contract(const Graph& h, int v, int u) {
 	std::map<int, int> nwName;
 	nwName[v] = nwName[u] = 0; 
 
+	if (h.partClasses[v].size() < h.partClasses[u].size()) // we assume that keys v and u exist!
+		std::swap(h.partClasses[v], h.partClasses[u]);
+
+	res.partClasses[0] = h.partClasses[v];
+	res.partClasses[0].insert(res.partClasses[0].end(), h.partClasses[u].begin(), h.partClasses[u].end());
+
 	for (int i = 0, idx = 0; i < h.nwName.size(); i += 1) {
 		if (i == v or i == u) 
 			continue; 
 
 		idx += 1; 
 		nwName[i] = idx; 
-        if (i < h.n)
+        if (i < h.n) {
 		    updOldName[idx] = res.oldName[i]; 
+			res.partClasses[idx] = h.partClasses[i]; 
+		}
 	}
 
 	std::vector<int> upNwName = h.nwName; 

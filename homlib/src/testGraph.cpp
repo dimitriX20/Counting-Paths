@@ -250,9 +250,23 @@ void testNwNameContract() {
     assert(res.nwName[5] == 0); 
 }
 
+void testPartClassesContraction() {
+    Graph h = getPk(5); 
+    Graph res = contract(h, 0, 3); 
+    res.addNextNodeAndEdge();
+    res = contract(res, 1, 4);
+    assert(res.partClasses[0][0] == 1); 
+    assert(res.partClasses[0][1] == 5); 
+    assert(res.partClasses[1][0] == 0); 
+    assert(res.partClasses[1][1] == 3); 
+    assert(res.partClasses[2][0] == 2); 
+    assert(res.partClasses[3][0] == 4); 
+}
+
 void runAllTests() {
     testNwNameContract();
     testHomLib();
+    testPartClassesContraction();
 //testGenerateSpasm2(); 
 // testCountSubgraphs3();
 //testCountSubgraphs(); 
