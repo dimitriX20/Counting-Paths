@@ -6,8 +6,7 @@
 #include <cmath>
 #include <map>
 #include <algorithm>
-#include <numeric>   
-#include "dsu.cpp"
+#include <numeric>  
 #include <omp.h>
 #include <queue>
 #include <unordered_map> 
@@ -20,20 +19,22 @@ extern "C" {
 
 struct Graph {
 	int n, m;
-	DSU dsu;  
 	std::vector<std::vector<int>> adj;
 	std::vector<std::set<int>> s; 
 	std::vector<int> oldName; 
 	std::vector<int> nwName; 
+	std::unordered_map<int, std::vector<int>> partClasses; // store for i \in {0, ... n - 1} nodes in their partition 
 	std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> spasms;
 
-	Graph(int n) : n(n), adj(n), s(n), m(0), dsu(n), oldName(n), nwName(n) {
+	Graph(int n) : n(n), adj(n), s(n), m(0), oldName(n), nwName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
 		std::iota(nwName.begin(), nwName.end(), 0); 
+
+		for (int i = 0; i < n; i += 1) 
+			partClasses[i].push_back(i); 
 	}
 
-	void addEdge(int u, int v) {
-		//u = nwName[u], v = nwName[v]; // might need to delete 
+	void addEdge(int u, int v) { 
 		if (u < 0 or v < 0 or u >= n or v >= n or v == u) 
 			return; 
 		
@@ -49,36 +50,25 @@ struct Graph {
 
 	void addNextNodeAndEdge() {
 		n += 1; 
-		m += 1;
-		dsu.resize();
+		m += 1; 
 		
-		int N = oldName.size() + 1;
-		oldName.resize(N); 
+		int N = nwName.size() + 1;
+		oldName.resize(n); 
 		nwName.resize(N); 
 		
 		oldName[n - 1] = N - 1;
 		nwName[N - 1] = n - 1; // mxPrevN should be now a new node named n - 1 
 		
 		s.resize(n); 
-		s[n - 1].insert(nwName[n - 2]); // evtl. dsu.get[nwName[n - 2]]
-		s[nwName[n - 2]].insert(n - 1); 
+		s[n - 1].insert(nwName[N - 2]); 
+		s[nwName[N - 2]].insert(n - 1); 
 
 		adj.resize(n); 
-		adj[n - 1].push_back(nwName[n - 2]);
-		adj[nwName[n - 2]].push_back(n - 1);
+		adj[n - 1].push_back(nwName[N - 2]);
+		adj[nwName[N - 2]].push_back(n - 1);
+
+		partClasses[n - 1].push_back(N - 1); 
 	}
-
-	//   std::vector<std::pair<int, int>> getNonNeighbors() {
-	// 	std::vector<std::pair<int, int>> ans; 
-	// 	for (int i = 0; i < n; i += 1) {
-	// 		for (int j = i + 1; j < n; j += 1) {
-	// 			if (s[i].find(j) == s[i].end()) 
-	// 				ans.emplace_back(i, j); 
-	// 		}
-	// 	}
-	// 	return ans; 
-	// }
-
 
 	bool isIsomorphic(const Graph& h) {
 		if (h.n != this->n || h.m != this->m)
@@ -86,7 +76,7 @@ struct Graph {
 
 		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
 			int n_value = g.n;
-			g1_sz = 0; // Initialize the size of g1 to be 0
+			g1_sz = 0; 
 			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
 			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
 			EMPTYGRAPH(g1, m_value, n_value);
@@ -109,7 +99,7 @@ struct Graph {
 		statsblk stats;
 
 		int m_value, n_value;
-		size_t k, g1_sz = 0, g2_sz = 0; // Declare g1_sz and g2_sz
+		size_t k, g1_sz = 0, g2_sz = 0;  
 
 		options.getcanon = TRUE;
 
@@ -124,8 +114,8 @@ struct Graph {
 		DYNALLOC1(int, map, map_sz, n_value, "malloc");
 
 		graph *g1 = NULL, *g2 = NULL;
-		convertToNautyGraph(*this, g1, g1_sz, m_value);  // Converting this graph to nauty graph
-		convertToNautyGraph(h, g2, g2_sz, m_value);  // Converting graph h to nauty graph
+		convertToNautyGraph(*this, g1, g1_sz, m_value);   
+		convertToNautyGraph(h, g2, g2_sz, m_value);   
 
 		DYNALLOC2(graph, cg1, cg1_sz, n_value, m_value, "malloc");
 		DYNALLOC2(graph, cg2, cg2_sz, n_value, m_value, "malloc");
@@ -152,50 +142,6 @@ struct Graph {
 		return result;
 	}
 
-// 	int64_t countAutomorphisms() const {
-// 		auto convertToNautyGraph = [&](const Graph &g, graph *&g1, size_t &g1_sz, int m_value) {
-// 			int n_value = g.n;
-// 			g1_sz = 0; // Initialize the size of g1 to be 0
-// 			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
-// 			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
-// 			EMPTYGRAPH(g1, m_value, n_value);
-			
-// 			for (int i = 0; i < n_value; ++i) {
-// 				for (int j : g.adj[i]) {
-// 					ADDONEEDGE(g1, i, j, m_value);
-// 				}
-// 			}
-// 		}; 
-
-// 		DYNALLSTAT(int, lab, lab_sz);
-// 		DYNALLSTAT(int, ptn, ptn_sz);
-// 		DYNALLSTAT(int, orbits, orbits_sz);
-// 		DYNALLSTAT(graph, g, g_sz);
-// 		static DEFAULTOPTIONS_GRAPH(options);
-// 		statsblk stats;
-
-// 		int m, n;
-// 		n = this->n;
-// 		m = SETWORDSNEEDED(n);
-// 		nauty_check(WORDSIZE, m, n, NAUTYVERSIONID);
-
-// 		DYNALLOC1(int, lab, lab_sz, n, "malloc");
-// 		DYNALLOC1(int, ptn, ptn_sz, n, "malloc");
-// 		DYNALLOC1(int, orbits, orbits_sz, n, "malloc");
-
-// 		graph *gp = NULL;
-// 		size_t gp_sz = 0;
-// 		convertToNautyGraph(*this, gp, gp_sz, m);
-
-// 		DYNALLOC2(graph, g, g_sz, n, m, "malloc");
-
-// 		options.getcanon = TRUE;
-
-// 		densenauty(gp, lab, ptn, orbits, &options, &stats, m, n, g);
-
-// 		// Returning automorphism group size as a 64 bit integer
-// 		return stats.grpsize1;
-//   }
 
 	// Copy constructor
 	Graph(const Graph& other) {
@@ -204,7 +150,6 @@ struct Graph {
 			m = other.m;
 			adj = other.adj;
 			s = other.s;
-			dsu = other.dsu;
 			oldName = other.oldName; 
 			nwName = other.nwName; 
 	}
@@ -217,19 +162,16 @@ struct Graph {
 					m = other.m;
 					adj = other.adj;
 					s = other.s;
-					dsu = DSU(other.n);
 					oldName = other.oldName;
 					nwName = other.nwName; 
 			}
 			return *this;
 	}
 
-	// equal operator
 	bool operator==(const Graph other) {
 			return isIsomorphic(other);
 	}
-
-	//not equal operator
+ 
 	bool operator!=(const Graph other) {
 			return not isIsomorphic(other);
 	}
@@ -248,28 +190,14 @@ struct hashV {
 
 using partitionTable = std::unordered_map<std::vector<int>, int, hashV>;
 
-bool strongIsomorph(Graph& a, Graph& b) { // here we assume that a == b 
-	if (a.dsu.e.size() != b.dsu.e.size()) 
-		return false; 
-
-	std::map<int, std::vector<int>> clA;
-	std::map<int, std::vector<int>> clB;
-	int N = a.dsu.e.size(); 
-
-	for (int i = 0; i < N; i += 1) {
-		int pA = a.dsu.get(a.oldName[i]); 
-		int pB = b.dsu.get(b.oldName[i]); 
-		clA[pA].push_back(a.oldName[i]);
-		clB[pB].push_back(b.oldName[i]);
-	}
-	
+bool strongIsomorph(Graph& a, Graph& b) { // here we assume that graphs are already isomorphic, that is a == b 	
 	partitionTable t; 
-	for (auto& [i, v]: clA) {
+	for (auto& [i, v]: a.partClasses) {
 		std::sort(v.begin(), v.end()); 
 		t[v] += 1;
 	}
 
-	for (auto& [i, v]: clB) {
+	for (auto& [i, v]: b.partClasses) {
 		std::sort(v.begin(), v.end()); 
 		t[v] -= 1; 
 	}
@@ -280,7 +208,6 @@ bool strongIsomorph(Graph& a, Graph& b) { // here we assume that a == b
 
 	return isOk;
 }
-
 
 Graph getPk(int k) {
 	if (k < 1) 
@@ -294,7 +221,7 @@ Graph getPk(int k) {
 }
 
 void print(const Graph& g) {
-	std::cerr << " n: " << g.n << " m: " << g.m << "\n";
+	std::cerr << "n: " << g.n << " m: " << g.m << "\n";
 	for (int i = 0; i < g.n; ++i) {
 		std::cout << "Vertex " << i << ": ";
 		for (int v : g.adj[i]) {
@@ -308,41 +235,35 @@ Graph contract(const Graph& h, int v, int u) {
 	if (v >= h.n or u >= h.n or u < 0 or v < 0) // we assume that v and u are the new names 
 		return Graph(0); 
 
+	bool nichtBenachbart = h.s[u].find(u) == h.s[u].end(); 
+	#include <cassert>
+	assert(nichtBenachbart); 
+
 	if (v == u) 
 		return h; 
 
 	Graph res(h.n - 1);
+    res.oldName = h.oldName; 
+	std::vector<int> updOldName = h.oldName; 
+	updOldName[0] = h.oldName[v]; 
+
 	std::set<int> allNeighbors; 
-	res.dsu = h.dsu; 
-
-	int idx = 0; 
-	res.oldName = h.oldName; 
-	std::vector<int> updOldName = res.oldName; 
-	updOldName[idx] = res.oldName[v]; 
-
-	int p1 = res.dsu.get(res.oldName[v]); 
-	int p2 = res.dsu.get(res.oldName[u]); 
-//assert(not p1 == p2); 
-	res.dsu.unite(p1, p2);
-	
 	std::map<int, int> nwName;
+	nwName[v] = nwName[u] = 0; 
 
-	res.nwName = h.nwName; 
-	std::vector<int> upNwName = res.nwName; 
-	upNwName[res.oldName[v]] = upNwName[res.oldName[u]] = idx; 
-
-	//std::vector<int> nwName(h.dsu.e.size()); // evtl. mxOldName einführen 
-	nwName[v] = nwName[u] = idx; 
-
-	for (int i = 0; i < h.n; i += 1) {
+	for (int i = 0, idx = 0; i < h.nwName.size(); i += 1) {
 		if (i == v or i == u) 
 			continue; 
 
 		idx += 1; 
 		nwName[i] = idx; 
-		updOldName[idx] = res.oldName[i]; 
-		upNwName[res.oldName[i]] = idx; 
+        if (i < h.n)
+		    updOldName[idx] = res.oldName[i]; 
 	}
+
+	std::vector<int> upNwName = h.nwName; 
+    for (int i = 0; i < h.nwName.size(); i += 1)
+        upNwName[i] = nwName[h.nwName[i]];
 
 	res.oldName = updOldName; 
 	res.nwName = upNwName; 
@@ -374,124 +295,6 @@ Graph contract(const Graph& h, int v, int u) {
 
 	return res; 
 }
-
-
-// std::vector<std::pair<int, Graph>> mp; // global map to store all graphs and multiplicators 
-
-// void generateSpHelper(Graph& g) {  // here old format of spasms
-// 	std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
-	
-// 	#pragma omp parallel for ordered schedule(static)
-// 	for (int i = 0; i < pairs.size(); i++) {
-// 		auto &pair = pairs[i];
-// 		Graph newGraph = contract(g, pair.first, pair.second);
-
-// 		bool isomorphicExists = false;
-		
-// 		#pragma omp critical
-// 		{
-// 			for (auto &pairInMap : mp) {
-// 				if (newGraph == pairInMap.second) {
-// 					isomorphicExists = true;  
-// 					pairInMap.first += 1;
-// 					break; 
-// 				}
-// 			}
-// 		}
-
-// 		if (!isomorphicExists) { 
-// 			#pragma omp critical
-// 			{
-// 				mp.push_back({1, newGraph});
-// 			}
-// 			generateSpHelper(newGraph);
-// 		}
-// 	}
-// }
-
-// void generateSpasm(Graph &g) {   // here old format of spasms
-// 		mp.clear();
-// 		g.spasms.emplace_back(1, g);
-// 		generateSpHelper(g);
-// 		for (auto &pair: mp) 
-// 				g.spasms.emplace_back(pair);
-// }
-
-// void generateSpHelper(Graph& g) {
-// 		std::vector<std::pair<int, int>> pairs = g.getNonNeighbors();
-// 		for (auto &pair : pairs) {
-// 				Graph newGraph = contract(g, pair.first, pair.second);
-
-// 				bool isomorphicExists = false;
-// 				for (auto &pairInMap : mp) {
-// 						if (newGraph == pairInMap.second) {
-// 								isomorphicExists = true;  
-// 								pairInMap.first += 1;
-// 								break; 
-// 						}
-// 				}
-
-// 				if (!isomorphicExists) { 
-// 						mp.push_back({1, newGraph});
-// 						generateSpHelper(newGraph);
-// 				}
-// 		}
-// }
-
-
-// void generateSpasm(Graph& g) {// iterative version
-// 	mp.clear(); 
-// 	std::queue<Graph> q; 
-
-// 	q.emplace(g);
-// 	mp.emplace_back(1, g);
-
-// 	#pragma omp parallel
-// 	{
-// 		while (true) {
-// 			Graph h(1);
-
-// 			#pragma omp critical(queue_access)
-// 			{
-// 				if (q.empty()) break;
-
-// 				h = q.front(); 
-// 				q.pop();
-// 			}
-
-// 			std::vector<std::pair<int, int>> kontraktionen = h.getNonNeighbors();	
-// 			for (auto k: kontraktionen) {
-// 				Graph newGraph = contract(h, k.first, k.second);
-// 				bool isomorphicExists = false;
-
-// 				#pragma omp critical(map_access)
-// 				{
-// 					for (auto &pairInMap : mp) {
-// 						if (newGraph == pairInMap.second) {
-// 							isomorphicExists = true;  
-// 							pairInMap.first += 1;
-// 							break; 
-// 						}
-// 					}
-// 				}
-
-// 				if (not isomorphicExists) {
-// 					#pragma omp critical(map_access)
-// 					{
-// 						mp.push_back({1, newGraph});
-// 					}
-
-// 					#pragma omp critical(queue_access)
-// 					{
-// 						q.emplace(newGraph);
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	g.spasms = mp;
-// }
-
 
 bool isTree(Graph G) {
 	std::vector<int> parent(G.n, -1);

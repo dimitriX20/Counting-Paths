@@ -237,8 +237,21 @@ void testHomLib() {
 	assert(50400 == hh.run());
 }
 
+void testNwNameContract() {
+    Graph p5 = getPk(5); 
+    Graph res = contract(p5, 0, 3); 
+    res.addNextNodeAndEdge();     
+    res = contract(res, 1, 4); 
+    assert(res.nwName[0] == 1); 
+    assert(res.nwName[1] == 0); 
+    assert(res.nwName[2] == 2); 
+    assert(res.nwName[3] == 1); 
+    assert(res.nwName[4] == 3); 
+    assert(res.nwName[5] == 0); 
+}
 
 void runAllTests() {
+    testNwNameContract();
     testHomLib();
 //testGenerateSpasm2(); 
 // testCountSubgraphs3();
