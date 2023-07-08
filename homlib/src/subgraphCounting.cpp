@@ -2,47 +2,24 @@
 #include <vector>
 #include <iostream>
 #include <future> // Für std::async und std::future
+#include "../../homsearch/homsearch_lib.h"
 
-std::ostream&
-operator<<( std::ostream& dest, __int128_t value )
-{
-    std::ostream::sentry s( dest );
-    if ( s ) {
-        __uint128_t tmp = value < 0 ? -value : value;
-        char buffer[ 128 ];
-        char* d = std::end( buffer );
-        do
-        {
-            -- d;
-            *d = "0123456789"[ tmp % 10 ];
-            tmp /= 10;
-        } while ( tmp != 0 );
-        if ( value < 0 ) {
-            -- d;
-            *d = '-';
-        }
-        int len = std::end( buffer ) - d;
-        if ( dest.rdbuf()->sputn( d, len ) != len ) {
-            dest.setstate( std::ios_base::badbit );
-        }
-    }
-    return dest;
-}
+ 
 
-__int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
+int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 	N = std::min(N, size_t(g.n));
 
 	if (N == 1) 
 		return g.m;
 
-	std::vector<__int128> factorials(21); 
+	std::vector<int64_t> factorials(21); 
 	factorials[0] = 1LL; 
 
 	for (int64_t i = 1; i < 21LL; i += 1LL) 
 		factorials[i] = factorials[i - 1] * i; 
 
-	auto getBlockFactors = [&](Graph& cur) -> __int128 {
-		__int128 ans = 1; 
+	auto getBlockFactors = [&](Graph& cur) -> int64_t {
+		int64_t ans = 1; 
 		for (int i = 0; i < cur.n; i += 1) 
             ans *= factorials[cur.partClasses[i].size() - 1]; 
 		
@@ -50,8 +27,8 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 	}; 
  
 	size_t k = 2;  
-	g.spasms.push_back({{__int128(1), __int128(2 * g.m)}, getPk(2)}); // hom(p_2, g) == 2 * nrEdgesOfG
-	__int128 subgraphs = (N == 1 ? 0 : g.m); 
+	g.spasms.push_back({{int64_t(1), int64_t(2 * g.m)}, getPk(2)}); // hom(p_2, g) == 2 * nrEdgesOfG
+	int64_t subgraphs = (N == 1 ? 0 : g.m); 
     
 	while (k < N) { // efficiently transform k to k + 1 
 		k += 1; 
@@ -59,7 +36,7 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 		if (g.n < k or g.m < k - 1) // test if P_k+1 has more nodes or edges than g 
 			break; 
 
-        std::vector<std::pair<std::pair<__int128, __int128>, Graph>> nwSpasm; 
+        std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> nwSpasm; 
 		for (auto& [p, h]: g.spasms) {
 			Graph nw = h; 
 
@@ -77,7 +54,7 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 
 				bool same = false;  
                 Graph saveGraph(0);
-                std::pair<__int128, __int128> savePair;  
+                std::pair<int64_t, int64_t> savePair;  
 
 				for (auto& [p2, h2]: nwSpasm) { // search for isomorphism and strong isomorphism
 					if (h2 == res){
@@ -101,23 +78,29 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
                 if (same) 
                     nwSpasm.emplace_back(savePair, saveGraph);
 
-				if (not same) {  
-                    HomomorphismCounting<__int128> hom(res, g); 
-                    nwSpasm.push_back({{getBlockFactors(res) * (abs(int(k) - res.n) & 1 ? __int128(-1) : __int128(1)), hom.run()}, res});
-                }             
+                if (not same) {  
+                    homsearch *h = new_homsearch(res.adj, g.adj, -1, true, true, -1);
+                    h->search(0);
+
+                    int64_t homs = h->res_count;
+                    delete h;
+
+                    nwSpasm.push_back({{getBlockFactors(res) * (abs(int(k) - res.n) & 1 ? int64_t(-1) : int64_t(1)), homs}, res});
+                } 
+          
 			}
 		}
         std::swap(nwSpasm, g.spasms);  
         std::cerr << " Größe von g.spasms: " << g.spasms.size()  << "\n";
  
-        __int128 sub = 0; 
+        int64_t sub = 0; 
         for (auto [p, gr]: g.spasms) 
             sub += p.first * p.second; 
         
-        std::cout << " subgraphen von P_" << k << " in G ist: " << __int128(sub / __int128(2)) << "\n"; //need to overload operator to print __int128
+        std::cout << " subgraphen von P_" << k << " in G ist: " << int64_t(sub / int64_t(2)) << "\n"; //need to overload operator to print __int128
 	}
 
-	return subgraphs / __int128(2);
+	return subgraphs / int64_t(2);
 }
 
 
