@@ -79,13 +79,17 @@ int64_t countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
                     nwSpasm.emplace_back(savePair, saveGraph);
 
                 if (not same) {  
-                    homsearch *h = new_homsearch(res.adj, g.adj, -1, true, true, -1);
+                    auto adjRes = res.adj; 
+                    auto adjG = g.adj; 
+                    print(res); 
+                    std::cerr << "\n";
+                    homsearch *h = new_homsearch(adjRes, adjG, -1, false, false, -1);
                     h->search(0);
 
                     int64_t homs = h->res_count;
-                    delete h;
 
                     nwSpasm.push_back({{getBlockFactors(res) * (abs(int(k) - res.n) & 1 ? int64_t(-1) : int64_t(1)), homs}, res});
+                    delete h;
                 } 
           
 			}
