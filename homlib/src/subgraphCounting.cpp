@@ -126,7 +126,7 @@ struct countPathsOnePair {
     int s, t;
     std::vector<int> dist_s, dist_t;
 
-    countPathsOnePair(const Graph& g, int s, int t) : g(g), s(s), t(t), dist_s(g.n, -1), dist_t(g.n, -1) {}
+    countPathsOnePair(const Graph g, int s, int t) : g(g), s(s), t(t), dist_s(g.n, -1), dist_t(g.n, -1) {}
 
     void dfs(int u, std::vector<bool>& visited) {
         visited[u] = true;
@@ -166,7 +166,7 @@ struct countPathsOnePair {
         int sz = g.n; 
 
         for (int v = 0; v < g.n; ++v) {
-            if (not visited[v] or dist_s[v] + dist_t[v] > k) {
+            if (not visited[v] or dist_s[v] + dist_t[v] >= k) { // evtl. > k 
                 remove[v] = true;
                 sz -= 1;
             }
@@ -174,40 +174,60 @@ struct countPathsOnePair {
 
         if (sz > 22) 
             return 0;   
+ 
+        Graph res(sz);  
+        std::map<int, int> nwName;
+        nwName[s] = 0, nwName[t] = 1; 
 
-        // müssen zunächst den Graphen neu erstellen und umbennen s und t sind zB. 0 und 1 
-        // führe dies analog zu contract() durch!
-        Graph nw(sz); 
+        for (int i = 0, idx = 1; i < g.n; i += 1) {
+            if (i == s or i == t or remove[i]) 
+                continue; 
 
-        if (isTree(nw)) {
+            idx += 1; 
+            nwName[i] = idx;  
+        }
+    
+        for (int i = 0; i < g.n; i += 1) {
+            if (remove[i]) 
+                continue; 
+
+            for (int j: g.adj[i]) {
+                if (not remove[j]) 
+                    res.addEdge(nwName[i], nwName[j]); 
+            }
+        } 
+
+        if (isTree(res)) {
             // Tree dp 
             // oder Centroid Decomposition durchführen
-        }
+            // don't forget return
+        } 
 
-        // ans = summe über alle: dp[mask][1] mit pop_count(mask) <= k + 1
-            // starte ab k = dist[s][t] + 1 
+        auto getRes = [](Graph gg, int n, int k, int start, int end) {
+            int64_t ans = 0; 
+            std::vector<std::vector<int64_t>> dp(1 << n, std::vector<int64_t>(n, 0LL));
+            dp[1 << start][start] = 1;
 
-        int64_t ans = 0; 
-        for (int N = 2; N <= sz; N += 1) {
-            std::vector<std::vector<int64_t>> dp(1 << N, std::vector<int64_t> (N, 0LL));
-            dp[0][0] = 1; // neue Ecken 0 war s 
-            for (int s = 1; s < (1 << N); s += 1) {
-                if (__builtin_popcount(s) > k) 
+            for (int s = (1 << start); s < (1 << n); s++) {
+                if (__builtin_popcount(s) >= k) 
                     continue;
 
-                for (int i = 0; i < N; i += 1) {
+                for (int i = 0; i < n; i++) { 
                     if (dp[s][i]) {
-                        for (int j: g.adj[i]) {
+                        for (int j: gg.adj[i]) {
                             if (~s >> j & 1) {
-                                dp[s | 1 << j][j] += dp[s][i]; 
-                                ans += (j == 1) * dp[s][i]; 
+                                dp[s | 1 << j][j] += dp[s][i];
+                                ans += (j == end) * dp[s][i]; 
                             }
                         }
                     }
                 }
             }
-        }
+            
+            
+            return ans; 
+        }; 
 
-        return ans; 
+        return getRes(res, res.n, k, 0, 1); 
     }
 }; 

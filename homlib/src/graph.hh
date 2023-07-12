@@ -38,7 +38,7 @@ struct Graph {
 		if (u < 0 or v < 0 or u >= n or v >= n or v == u) 
 			return; 
 		
-		if (s[u].find(v) != s[u].end())  // Kante bereits vorhanden 
+		if (s[u].find(v) != s[u].end())  
 			return; 
 
 		adj[u].push_back(v);
@@ -57,7 +57,7 @@ struct Graph {
 		nwName.resize(N); 
 		
 		oldName[n - 1] = N - 1;
-		nwName[N - 1] = n - 1; // mxPrevN should be now a new node named n - 1 
+		nwName[N - 1] = n - 1;  
 		
 		s.resize(n); 
 		s[n - 1].insert(nwName[N - 2]); 
