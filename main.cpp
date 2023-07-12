@@ -1,92 +1,69 @@
-#include "subgraphCounting.cpp"
-#include "testGraph.cpp"
-#include <chrono> // Für Zeitmessung
-
-Graph createGridGraph(int rows, int columns) {
-    Graph grid(rows * columns);
-    
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < columns; j++) {
-            int vertex = i * columns + j;
-            
-            // Add edge to the right (if possible)
-            if (j < columns - 1) {
-                int rightVertex = vertex + 1;
-                grid.addEdge(vertex, rightVertex);
-            }
-            
-            // Add edge to the bottom (if possible)
-            if (i < rows - 1) {
-                int bottomVertex = vertex + columns;
-                grid.addEdge(vertex, bottomVertex);
-            }
-        }
-    }
-    
-    return grid;
-}
+//#include "subgraphCounting.cpp"
+//#include "testGraph.cpp"
+#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
 
 int main() {
-	//ios::sync_with_stdio(false); 
-	//cin.tie(0);  
-	// Startzeitpunkt erfassen
-	auto startTime = std::chrono::high_resolution_clock::now();
+    int n, m, start, end, k;
+    std::vector<std::vector<bool>> g;
+    std::string line;
+    bool terminals = false;
 
-	// Graph p4 = getPk(4); 
-	// p4.addEdge(0, 2); 
+    while(std::getline(std::cin, line)) {
+        if(line.empty()) 
+			continue;  
 
-	Graph g(11); 
-	for (int i = 0; i < 11; i += 1) {
-		for (int j = i + 1; j < 11; j += 1) {
-			g.addEdge(i, j); 
+        char line_type = line[0];
+        std::istringstream iss(line.substr(1)); // remove line_type and parse the rest
+
+        if (line_type == 'c') {
+            
+        } else if (line_type == 'p') {
+            std::string problem_type;
+            iss >> problem_type >> n >> m;
+			g.resize(n, std::vector<bool>(n, false));
+
+        } else if (line_type == 'e') {
+            int v1, v2;
+            iss >> v1 >> v2;
+            v1--, v2--; 
+            g[v1][v2] = g[v2][v1] = true;
+        } else if (line_type == 'l') {
+            iss >> k; 
+            k += 1;
+        } else if (line_type == 't') {
+            iss >> start >> end;
+            start--, end--; 
+            terminals = true;
+        }
+    } 
+
+	if (terminals) {
+		int64_t ans = 0; 
+
+		std::vector<std::vector<int64_t>> dp(1 << n, std::vector<int64_t>(n, 0LL));
+		dp[1 << start][start] = 1;
+		for (int s = (1 << start); s < (1 << n); s++) {
+			if (__builtin_popcount(s) >= k) 
+				continue;
+
+			for (int i = 0; i < n; i++) { 
+				if (dp[s][i]) {
+					for (int j = 0; j < n; j++) {
+						if (g[i][j] && (~s >> j & 1)) {
+							dp[s | 1 << j][j] += dp[s][i];
+							ans += (j == end) * dp[s][i]; 
+						}
+					}
+				}
+			}
 		}
+		
+		
+		std::cout << ans << "\n";
 	}
-	countSubgraphs(g, 10);
-	// g.addEdge(0, 5); 
-
-	// HomomorphismCounting<int64_t> hh(p4, g); 
-	// for (int i = 0; i < 5; i += 1) {
-	// 	if (i == 3) 
-	// 		continue; 
-	// 	Graph nwGraph = p4;
-	// 	nwGraph.addNode(); 
-	// 	nwGraph.addEdge(nwGraph.dsu.get(3), 4); 
-	// 	Graph nw = contract(nwGraph, i, 4); 
-	// }
-
-	//Graph p11 = getPk(11); 
-	//generateSpasm(p11); 
-	//std::cout << " " << p11.spasms.size() << "\n";
-
-	// Graph p2 = getPk(10); 
-	// Graph p12 = getPk(222);
-	// p12.addEdge(199, 0);
-	// p2.addEdge(1, 3);   
-	// p12.addEdge(123, 125); 
-	// p12.addEdge(1, 211);  
-	//Graph gitterGraph = createGridGraph(6, 6); 
-
-	// Graph g(10); 
-	// for (int i = 0; i < 10; i += 1) {
-	// 	for (int j = i + 1; j < 10; j += 1) {
-	// 		g.addEdge(i,j); 
-	// 	}
-	// }
-
-	// Graph p5 = getPk(10); 
-	// SubgraphCounting<int64_t> s(p5, g); //1814400
-
-	// std::cout << s.countSubgraphs() << "\n"; // 1 262 816
-
-	runAllTests();
-	// Endzeitpunkt erfassen
-	auto endTime = std::chrono::high_resolution_clock::now();
-
-	// Zeitdifferenz berechnen und in Millisekunden umwandeln
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-
-	// Zeit in Millisekunden ausgeben
-	std::cout << "Execution time: " << duration.count() << " milliseconds\n";
-
-	return 0;
+    
+    return 0;
 }
