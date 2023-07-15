@@ -8,13 +8,11 @@
 int main() {
     int n, m, start, end, k;
     Graph gg(0); 
+    
     std::string line;
-    bool terminals = false;
+    bool terminals = false; 
 
-    while (std::getline(std::cin, line)) {
-        if (line.empty()) 
-			continue;  
-
+    while (std::getline(std::cin, line) and not line.empty()) {
         char line_type = line[0];
         std::istringstream iss(line.substr(1)); // remove line_type and parse the rest
 
@@ -31,16 +29,24 @@ int main() {
             gg.addEdge(v1, v2); 
         } else if (line_type == 'l') {
             iss >> k; 
-            k += 1;
+            k += 1; 
         } else if (line_type == 't') {
             iss >> start >> end;
             start--, end--; 
-            terminals = true;
-            break;
+            terminals = true; 
         }
     } 
 
-	if (terminals) { 
+    if (isTree(gg)) {
+        countPathsTree counter(gg, gg.n, k, terminals); 
+        if (terminals) 
+            std::cout << counter.countTerminal(start, end) << "\n"; 
+        
+        else 
+            std::cout << counter.countAll() << "\n"; 
+    }
+
+	else if (terminals) { 
 		countPathsOnePair counter(gg, start, end);
 		std::cout << counter.countSTPaths(k) << "\n";
 	} 

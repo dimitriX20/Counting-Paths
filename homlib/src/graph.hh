@@ -78,7 +78,7 @@ struct Graph {
 			int n_value = g.n;
 			g1_sz = 0; 
 			DYNALLOC2(graph, g1, g1_sz, n_value, m_value, "malloc");
-			g1_sz = n_value * m_value; // Update the size of g1 after the allocation
+			g1_sz = n_value * m_value;  
 			EMPTYGRAPH(g1, m_value, n_value);
 			
 			for (int i = 0; i < n_value; ++i) {
@@ -128,7 +128,6 @@ struct Graph {
 
 		bool result = (k == m_value*(size_t)n_value);
 
-		// Deallocate memory
 		DYNFREE(g1, g1_sz);
 		DYNFREE(g2, g2_sz);
 		DYNFREE(cg1, cg1_sz);
@@ -142,40 +141,35 @@ struct Graph {
 		return result;
 	}
 
-
-	// Copy constructor
-	Graph(const Graph& other) {
-			// Perform a deep copy of the graph
-			n = other.n;
-			m = other.m;
-			adj = other.adj;
-			s = other.s;
-			oldName = other.oldName; 
-			nwName = other.nwName; 
-			partClasses = other.partClasses; 
+	Graph(const Graph& other) { 
+		n = other.n;
+		m = other.m;
+		adj = other.adj;
+		s = other.s;
+		oldName = other.oldName; 
+		nwName = other.nwName; 
+		partClasses = other.partClasses; 
 	}
 
-	// Assignment operator
 	Graph& operator=(const Graph& other) {
-			if (this != &other) {
-					// Perform a deep copy of the graph
-					n = other.n;
-					m = other.m;
-					adj = other.adj;
-					s = other.s;
-					oldName = other.oldName;
-					nwName = other.nwName; 
-					partClasses = other.partClasses; 
+			if (this != &other) { 
+				n = other.n;
+				m = other.m;
+				adj = other.adj;
+				s = other.s;
+				oldName = other.oldName;
+				nwName = other.nwName; 
+				partClasses = other.partClasses; 
 			}
 			return *this;
 	}
 
 	bool operator==(const Graph other) {
-			return isIsomorphic(other);
+		return isIsomorphic(other);
 	}
  
 	bool operator!=(const Graph other) {
-			return not isIsomorphic(other);
+		return not isIsomorphic(other);
 	}
 };
 
@@ -183,8 +177,8 @@ struct hashV {
 	size_t operator()(const std::vector<int> &x) const {
 		constexpr size_t p = 1e9+7;
 		size_t hash = 0;
-		for(int i = 0; i < x.size(); ++i) {
-		hash += p * hash + x[i];
+		for (int i = 0; i < x.size(); ++i) {
+			hash += p * hash + x[i];
 		}
 		return hash;
 	}
@@ -237,10 +231,6 @@ Graph contract(Graph h, int v, int u) {
 	if (v >= h.n or u >= h.n or u < 0 or v < 0) // we assume that v and u are the new names 
 		return Graph(0); 
 
-	//bool nichtBenachbart = h.s[u].find(u) == h.s[u].end(); 
-	//#include <cassert>
-	//assert(nichtBenachbart); 
-
 	if (v == u) 
 		return h; 
 
@@ -253,7 +243,7 @@ Graph contract(Graph h, int v, int u) {
 	std::map<int, int> nwName;
 	nwName[v] = nwName[u] = 0; 
 
-	if (h.partClasses[v].size() < h.partClasses[u].size()) // we assume that keys v and u exist!
+	if (h.partClasses[v].size() < h.partClasses[u].size()) 
 		std::swap(h.partClasses[v], h.partClasses[u]);
 
 	res.partClasses[0] = h.partClasses[v];
@@ -385,12 +375,14 @@ Graph createPetersonGraph() {
 }
 
 void printPartitionClassesOfGraph(Graph res) {
-		std::cerr << res.n << " " << res.m << "\n";
-		for (int i = 0; i < res.n; i += 1) {
-			std::cerr << "Ecke: " << i + 1 << ": ";
-			for (int j: res.partClasses[i]) 
-				std::cerr << " " << j + 1 << " "; 
+	std::cerr << res.n << " " << res.m << "\n";
+	for (int i = 0; i < res.n; i += 1) {
+		std::cerr << "Ecke: " << i + 1 << ": ";
+		
+		for (int j: res.partClasses[i]) 
+			std::cerr << " " << j + 1 << " "; 
+			
 		std::cerr << "\n";
-		}
-		std::cerr << "\n";
+	}
+	std::cerr << "\n";
 }

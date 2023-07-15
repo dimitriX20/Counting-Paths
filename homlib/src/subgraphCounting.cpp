@@ -1,7 +1,7 @@
-#include "hom.hh" // achte auf doppeltes include, wenn spasm wieder auskommentiert 
+#include "hom.hh"  
 #include <vector>
 #include <iostream>
-#include <future> // Für std::async und std::future
+#include <future>  
 
 std::ostream&
 operator<<( std::ostream& dest, __int128_t value )
@@ -53,10 +53,10 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 	g.spasms.push_back({{__int128(1), __int128(2 * g.m)}, getPk(2)}); // hom(p_2, g) == 2 * nrEdgesOfG
 	__int128 subgraphs = (N == 1 ? 0 : g.m); 
     
-	while (k < N) { // efficiently transform k to k + 1 
+	while (k < N) { 
 		k += 1; 
          
-		if (g.n < k or g.m < k - 1) // test if P_k+1 has more nodes or edges than g 
+		if (g.n < k or g.m < k - 1) 
 			break; 
 
         std::vector<std::pair<std::pair<__int128, __int128>, Graph>> nwSpasm; 
@@ -73,7 +73,7 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 				if (toContract == neighbor)  
 					continue; 
 
-				Graph res = contract(nw, toContract, nw.nwName[k - 1]); // toContract ist bereits neuer Name 
+				Graph res = contract(nw, toContract, nw.nwName[k - 1]);  
 
 				bool same = false;  
                 Graph saveGraph(0);
@@ -119,6 +119,96 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 
 	return subgraphs / __int128(2);
 }
+
+struct countPathsTree {
+    Graph g;  
+
+    int n, a, b; 
+    int subtree[200001];
+
+    int64_t ans = 0, bit[200001];
+    int mx_depth;
+    bool processed[200001];
+    bool terminal;  
+
+    countPathsTree(Graph g, int n, int N, bool terminal): g(g), n(n), b(N - 1), terminal(terminal) {}
+
+    int get_subtree_sizes(int node, int parent = 0) {
+        subtree[node] = 1;
+        for (int i : g.adj[node])
+            if (!processed[i] && i != parent)
+                subtree[node] += get_subtree_sizes(i, node);
+        return subtree[node];
+    }
+ 
+    int get_centroid(int desired, int node, int parent = 0) {
+        for (int i : g.adj[node])
+            if (!processed[i] && i != parent && subtree[i] >= desired)
+                return get_centroid(desired, i, node);
+        return node;
+    }
+    
+    void update(int pos, int64_t val) {
+        for (pos++; pos <= n; pos += pos & -pos) bit[pos] += val;
+    }
+    
+    int64_t query(int l, int r) {
+        int64_t ans = 0;
+        for (r++; r; r -= r & -r) ans += bit[r];
+        for (; l; l -= l & -l) ans -= bit[l];
+        return ans;
+    }
+    
+    void get_cnt(int node, int parent, bool filling, int depth = 1) {
+        if (depth > b) return;
+        mx_depth = std::max(mx_depth, depth);
+        if (filling) update(depth, 1);
+        else ans += query(std::max(0, a - depth), b - depth);
+        for (int i : g.adj[node])
+            if (!processed[i] && i != parent) get_cnt(i, node, filling, depth + 1);
+    }
+    
+    void centroid_decomp(int node = 1) {
+        int centroid = get_centroid(get_subtree_sizes(node) >> 1, node);
+        processed[centroid] = true;
+        mx_depth = 0;
+        for (int i : g.adj[centroid])
+            if (!processed[i]) {
+                get_cnt(i, centroid, false);
+                get_cnt(i, centroid, true);
+            }
+        for (int i = 1; i <= mx_depth; i++) update(i, -query(i, i));
+        for (int i : g.adj[centroid])
+            if (!processed[i]) centroid_decomp(i);
+    }
+
+    void bfs(int start, std::vector<int>& dist) {
+        std::queue<int> q;
+        q.push(start);
+        dist[start] = 0;
+        while (not q.empty()) {
+            int u = q.front(); q.pop();
+            for (int v : g.adj[u]) {
+                if (dist[v] == -1) {
+                    dist[v] = dist[u] + 1;
+                    q.push(v);
+                }
+            }
+        }
+    }
+
+    int64_t countAll() { 
+        update(0, 1);
+	    centroid_decomp();
+	    return ans;
+    }
+
+    int countTerminal(int start, int end) {
+        std::vector<int> d(g.n, -1); 
+        bfs(start, d); 
+        return int(d[end] != -1 and d[end] <= b);
+    }
+};
 
 
 struct countPathsOnePair {
@@ -197,12 +287,6 @@ struct countPathsOnePair {
             }
         } 
 
-        if (isTree(res)) {
-            // Tree dp 
-            // oder Centroid Decomposition durchführen
-            // don't forget return
-        } 
-
         auto getRes = [](Graph gg, int n, int k, int start, int end) {
             int64_t ans = 0; 
             std::vector<std::vector<int64_t>> dp(1 << n, std::vector<int64_t>(n, 0LL));
@@ -223,7 +307,6 @@ struct countPathsOnePair {
                     }
                 }
             }
-            
             
             return ans; 
         }; 
