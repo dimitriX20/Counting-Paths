@@ -108,13 +108,13 @@ __int128 countSubgraphs(Graph g, size_t N) { // count sub(P_k,g) with k <= N + 1
 			}
 		}
         std::swap(nwSpasm, g.spasms);  
-        std::cerr << " Größe von g.spasms: " << g.spasms.size()  << "\n";
+        //std::cerr << " Größe von g.spasms: " << g.spasms.size()  << "\n";
  
         __int128 sub = 0; 
         for (auto [p, gr]: g.spasms) 
             sub += p.first * p.second; 
         
-        std::cout << " subgraphen von P_" << k << " in G ist: " << __int128(sub / __int128(2)) << "\n"; //need to overload operator to print __int128
+       // std::cout << " subgraphen von P_" << k << " in G ist: " << __int128(sub / __int128(2)) << "\n"; //need to overload operator to print __int128
 	}
 
 	return subgraphs / __int128(2);

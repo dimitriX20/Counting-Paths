@@ -19,7 +19,7 @@ int main() {
         std::istringstream iss(line.substr(1)); // remove line_type and parse the rest
 
         if (line_type == 'c') {
-            
+            continue;
         } else if (line_type == 'p') {
             std::string problem_type;
             iss >> problem_type >> n >> m;
@@ -36,6 +36,7 @@ int main() {
             iss >> start >> end;
             start--, end--; 
             terminals = true;
+            break;
         }
     } 
 
