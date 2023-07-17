@@ -24,7 +24,7 @@ struct Graph {
 	std::vector<int> oldName; 
 	std::vector<int> nwName; 
 	std::unordered_map <int, std::vector<int>> partClasses; // store for i \in {0, ... n - 1} nodes in their partition 
-	std::vector<std::pair<std::pair<__int128, __int128>, Graph>> spasms; // format: {{coeff, homNumber}, GraphInSpasmOf(G)}
+	std::vector<std::pair<std::pair<int64_t, int64_t>, Graph>> spasms; // format: {{coeff, homNumber}, GraphInSpasmOf(G)}
 
 	Graph(int n) : n(n), adj(n), s(n), m(0), oldName(n), nwName(n) {
 		std::iota(oldName.begin(), oldName.end(), 0); 
